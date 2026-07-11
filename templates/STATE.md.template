@@ -1,0 +1,18 @@
+# 🧠 STATE — Estado Global del Proyecto
+> Única fuente de verdad del proyecto.
+> **Orquestador:** Planifica aquí y actualiza decisiones. Usa `node scripts/harness-start.js --task <id>` para preparar un área de trabajo.
+> **Especialista:** NO toques esto. Usa `node scripts/harness-finish.js --task <id>` al terminar tu tarea para que se marque sola.
+
+## 🎯 Backlog de Tareas
+- [ ] Tarea 1: [Descripción corta]
+
+## 🛑 Decisiones y Bloqueos Activos
+- **Decisiones recientes:**
+  - 
+- **Bloqueos / Impactos Cruzados:**
+  - 
+
+## 🛡️ Criterios Universales
+1. Todo código nuevo debe ejecutarse sin errores.
+2. `node init.js` debe retornar `[HARNESS OK]`.
+3. Nunca borrar archivos a mano. Usa siempre los scripts `harness:start` y `harness:finish`.

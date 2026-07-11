@@ -1,0 +1,26 @@
+# 🧭 Mapa de la memoria — .harness/context/
+> Índice de navegación de la capa de contexto de {{PROJECT_NAME}}.
+> Regla: los VOLÁTILES se leen siempre (FAST LOAD); los ESTABLES bajo demanda (FULL LOAD).
+
+## Volátiles — leer al inicio de CADA sesión (FAST LOAD)
+
+| Fichero | Responde a | Quién lo actualiza |
+|---|---|---|
+| [activeContext.md](activeContext.md) | ¿Dónde estamos? ¿Tarea en progreso? ¿Bloqueantes? | `harness-start/finish.js` |
+| [progress.md](progress.md) | Estado por módulos (semáforos) | `harness-finish.js` + Orquestador |
+| [plans-index.md](plans-index.md) | ¿Qué planes hay activos? | Orquestador |
+
+## Estables — leer bajo demanda (FULL LOAD o cuando la tarea lo pida)
+
+| Fichero | Responde a | Cuándo leerlo |
+|---|---|---|
+| [projectbrief.md](projectbrief.md) | ¿Qué es el proyecto y sus objetivos core? | Al incorporarte o si dudas del alcance |
+| [productContext.md](productContext.md) | ¿Por qué existe? ¿Para quién? | Decisiones de producto/UX |
+| [systemPatterns.md](systemPatterns.md) | Arquitectura y decisiones técnicas (D001…) | Antes de tocar arquitectura — registro ÚNICO de decisiones |
+| [techContext.md](techContext.md) | Stack, comandos, restricciones | Setup, dependencias, comandos |
+
+## Relación con el resto del harness
+
+- Backlog y bloqueos → `.harness/STATE.md` (fuente de verdad única, no se duplica aquí)
+- Si el proyecto tiene **harness-okf** instalado: conocimiento de DOMINIO → `.harness/llm-wiki/index.md`
+- Frontera: **context/ = dónde vamos (sesión) · llm-wiki/ = qué sabemos (dominio)**

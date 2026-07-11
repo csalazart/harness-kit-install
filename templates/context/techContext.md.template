@@ -1,0 +1,42 @@
+# ⚙️ techContext — Contexto Técnico
+> Fichero ESTABLE — leer bajo demanda (FULL LOAD)
+> Actualizar cuando cambie una dependencia o el entorno de desarrollo
+
+## Stack tecnológico
+{{TECH_STACK}}
+
+## Entorno de desarrollo
+
+### Requisitos previos
+- {{DEV_REQUIREMENT_1}}
+
+### Setup inicial
+```bash
+# Clonar e instalar dependencias
+{{SETUP_COMMANDS}}
+```
+
+### Comandos del día a día
+| Acción | Comando |
+|--------|---------|
+| Verificar harness | `node init.js` |
+| Dev server | `{{DEV_COMMAND}}` |
+| Build | `{{BUILD_COMMAND}}` |
+| Tests | `{{TEST_COMMAND}}` |
+| Nueva tarea | `node scripts/harness-start.js --task nombre` |
+| Cerrar tarea | `node scripts/harness-finish.js --task nombre` |
+| Cargar contexto | skill `load-memory` → `.harness/skills/load-memory.md` |
+| Actualizar contexto | skill `update-memory` → `.harness/skills/update-memory.md` |
+
+## Restricciones técnicas conocidas
+- {{TECH_CONSTRAINTS}}
+
+## Variables de entorno requeridas
+| Variable | Descripción | Dónde obtenerla |
+|---|---|---|
+| (ninguna por ahora) | — | — |
+
+## Historial de cambios de stack
+| Fecha | Cambio | Razón |
+|---|---|---|
+| {{DATE}} | Inicialización con {{TECH_STACK}} | Setup inicial |

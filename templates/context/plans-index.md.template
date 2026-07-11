@@ -1,0 +1,19 @@
+# 📋 plans-index — Índice de Planes
+> Fichero VOLÁTIL — actualizado por el Orquestador
+> Límite recomendado: 40 líneas
+
+## Planes activos
+
+| Plan | Estado | Fichero | Creado |
+|------|--------|---------|--------|
+| (ninguno aún) | — | — | — |
+
+## Planes completados
+
+| Plan | Completado | Fichero |
+|------|------------|---------|
+| (ninguno aún) | — | — |
+
+## Notas
+- Los planes detallados se guardan en `.harness/workspaces/{tarea}/orden.md`
+- Los planes archivados se consultan en `.harness/logs/`

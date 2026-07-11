@@ -1,0 +1,15 @@
+# GEMINI.md — {{PROJECT_NAME}}
+> Instrucciones de comportamiento para Gemini en este proyecto.
+> Última actualización: {{DATE}}
+
+---
+
+## Lo primero que debes hacer
+
+**Lee AUTOMATICAMENTE `AGENTS.md` completo antes de cualquier otra cosa.**
+
+@AGENTS.md 
+
+`AGENTS.md` es el protocolo universal de este proyecto. Aplica a cualquier IA.
+Contiene el handshake, los roles, el mapa del repositorio, las reglas y el hand-off.
+Este archivo (`GEMINI.md`) solo añade comportamiento específico de Gemini por encima de ese protocolo.

@@ -1,0 +1,28 @@
+# 📌 projectbrief — Visión del Proyecto
+> Fichero ESTABLE — leer bajo demanda (FULL LOAD)
+> Solo el Orquestador actualiza este fichero
+
+## Nombre del proyecto
+{{PROJECT_NAME}}
+
+## Descripción
+{{PROJECT_DESCRIPTION}}
+
+## Problema que resuelve
+{{PROBLEM_STATEMENT}}
+
+## Usuarios objetivo
+{{TARGET_USERS}}
+
+## Objetivos core (lo que DEBE hacer)
+- {{CORE_OBJECTIVE_1}}
+- {{CORE_OBJECTIVE_2}}
+
+## Fuera de alcance (lo que NO hará)
+- [pendiente de definir]
+
+## Restricciones no negociables
+- [pendiente de definir]
+
+## Fecha de inicio
+{{DATE}}

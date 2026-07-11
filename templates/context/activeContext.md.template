@@ -1,0 +1,17 @@
+# 🔄 activeContext — Estado de Sesión Activa
+> Fichero VOLÁTIL — actualizado automáticamente por harness-finish.js y harness-start.js
+> Límite recomendado: 50 líneas
+
+## Sesión actual
+- **Rama Git:** (pendiente — actualizar al iniciar trabajo)
+- **Último cambio:** Proyecto inicializado — {{DATE}}
+- **Próximo paso:** Revisar backlog en .harness/STATE.md y seleccionar primera tarea
+- **Bloqueantes:** Ninguno
+
+## Resumen de última sesión
+- {{DATE}}: Proyecto "{{PROJECT_NAME}}" inicializado con harness-kit
+  - Harness generado: AGENTS.md, STATE.md, scripts, rules/, context/
+  - Estado: listo para primera tarea
+
+## Patrones y preferencias detectadas
+- (se irá completando conforme avance el proyecto)

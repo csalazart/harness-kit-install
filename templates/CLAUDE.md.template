@@ -1,0 +1,77 @@
+# CLAUDE.md — {{PROJECT_NAME}}
+> Instrucciones de alto nivel para Claude Code. Este fichero se carga automáticamente al arrancar en este directorio.
+> Última actualización: {{DATE}}
+
+---
+
+@AGENTS.md
+
+## ⚡ ARRANQUE OBLIGATORIO — Leer esto primero
+
+> Ejecutar esta secuencia ANTES de responder al usuario.
+
+---
+
+## 🎭 Modos de Operación
+
+- **PLAN** (default): genera propuestas y planes — NO ejecuta cambios en código ni ficheros del proyecto
+- **ACT**: el usuario escribe "ACT" para autorizar ejecución del plan aprobado
+- **TUTOR**: el usuario escribe "TUTOR:" para modo educativo paso a paso con confirmación
+
+---
+
+## Descripción del proyecto
+
+{{PROJECT_DESCRIPTION}}
+
+---
+
+## Stack tecnológico
+
+{{TECH_STACK}}
+<!-- Ejemplo:
+- Runtime: Node.js 20 + pnpm
+- Framework: Next.js 14
+- Base de datos: PostgreSQL + Prisma
+- Testing: Jest + Testing Library
+- Deploy: Docker + GitHub Actions
+-->
+
+---
+
+## Comandos clave
+
+| Acción | Comando |
+|--------|---------|
+| Verificar entorno | `node init.js` |
+| Dev server | `{{DEV_COMMAND}}` |
+| Build | `{{BUILD_COMMAND}}` |
+| Tests | `{{TEST_COMMAND}}` |
+| Nueva tarea | `node scripts/harness-start.js --task nombre` |
+| Cerrar tarea | `node scripts/harness-finish.js --task nombre` |
+| Cargar contexto | skill `load-memory` → `.harness/skills/load-memory.md` |
+| Actualizar contexto | skill `update-memory` → `.harness/skills/update-memory.md` |
+
+---
+
+## Estructura del proyecto
+
+```
+{{PROJECT_STRUCTURE}}
+```
+
+---
+
+## Restricciones — Lo que NUNCA debes hacer
+
+- Nunca commitear sin que `node init.js` termine con `[HARNESS OK]`
+- Nunca modificar `.harness/STATE.md` si eres un agente especialista
+- Nunca abrir un nuevo workspace sin cerrar el anterior con `harness-finish.js`
+- {{PROJECT_SPECIFIC_RESTRICTIONS}}
+
+---
+
+## Notas del dominio
+
+{{DOMAIN_NOTES}}
+<!-- Contexto específico del negocio, regulaciones, convenciones del equipo, etc. -->

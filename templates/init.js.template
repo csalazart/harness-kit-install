@@ -1,0 +1,165 @@
+#!/usr/bin/env node
+/**
+ * init.js — Verificación de Salud del Entorno y Harness
+ * Generado por harness-kit · Proyecto: {{PROJECT_NAME}}
+ * 
+ * USO: node init.js
+ * Devuelve exit 0 si todo OK, exit 1 si hay errores.
+ */
+
+const fs = require('fs');
+const path = require('path');
+const { execSync } = require('child_process');
+
+let pass = 0;
+let fail = 0;
+const errors = [];
+
+function check(desc, isOk, errorMsg = "") {
+  if (isOk) {
+    console.log(`  ✅  ${desc}`);
+    pass++;
+  } else {
+    console.log(`  ❌  ${desc}`);
+    console.log(`       → ${errorMsg}`);
+    fail++;
+    errors.push(desc);
+  }
+}
+
+function runCommand(desc, cmd) {
+  try {
+    execSync(cmd, { stdio: 'ignore' });
+    check(desc, true);
+  } catch (err) {
+    check(desc, false, `Fallo al ejecutar: ${cmd}`);
+  }
+}
+
+console.log("\n══════════════════════════════════════════════════");
+console.log(`  HARNESS INIT — {{PROJECT_NAME}}`);
+console.log("══════════════════════════════════════════════════\n");
+
+// ──────────────────────────────────────────────────────
+// BLOQUE 1 — Verificación del Harness Core
+// ──────────────────────────────────────────────────────
+console.log("  ▸ [1/3] Estructura del Harness");
+
+const requiredFiles = [
+  'AGENTS.md',
+  '.harness/STATE.md',
+  'scripts/harness-start.js',
+  'scripts/harness-finish.js'
+];
+
+requiredFiles.forEach(file => {
+  const filePath = path.join(__dirname, file);
+  check(`Existe ${file}`, fs.existsSync(filePath), "Archivo no encontrado");
+});
+
+// Comprobar tareas activas en STATE.md
+const statePath = path.join(__dirname, '.harness', 'STATE.md');
+if (fs.existsSync(statePath)) {
+  const stateContent = fs.readFileSync(statePath, 'utf8');
+  const activeTasks = (stateContent.match(/^-\s*\[\s\]/gm) || []).length;
+  // Solo informativo, en Lean no restringimos a 1 tarea porque puede haber agentes en paralelo
+  console.log(`  ℹ️   Tareas pendientes encontradas en STATE: ${activeTasks}`);
+}
+
+// ──────────────────────────────────────────────────────
+// BLOQUE 2 — Skills: verificar que están enlazados al agente activo
+// ──────────────────────────────────────────────────────
+console.log("\n  ▸ [2/4] Skills de IA");
+
+const skillsSrc = path.join(__dirname, '.harness', 'skills');
+const agentDirs = [
+  { name: 'Claude Code', skillsPath: path.join(__dirname, '.claude',  'skills') },
+  { name: 'Gemini',      skillsPath: path.join(__dirname, '.gemini',  'skills') },
+  { name: 'Estándar',    skillsPath: path.join(__dirname, '.agents',  'skills') },
+];
+
+if (!fs.existsSync(skillsSrc)) {
+  console.log('  ℹ️   .harness/skills/ no existe — sin skills instalados');
+} else {
+  let linkedCount = 0;
+  for (const agent of agentDirs) {
+    if (fs.existsSync(agent.skillsPath)) {
+      console.log(`  ✅  Skills disponibles para ${agent.name}`);
+      linkedCount++;
+    }
+  }
+  if (linkedCount === 0) {
+    console.log('  ⚠️   Skills no enlazados — ejecuta: node scripts/harness-link-skills.js');
+  }
+}
+
+// ──────────────────────────────────────────────────────
+// BLOQUE 3 — Verificación de la Capa de Contexto
+// ──────────────────────────────────────────────────────
+console.log("\n  ▸ [3/4] Capa de Contexto");
+
+check('Existe .harness/context/projectbrief.md',
+  fs.existsSync(path.join(__dirname, '.harness', 'context', 'projectbrief.md')),
+  'Ejecutar el init o crear manualmente desde templates/context/projectbrief.md.template'
+);
+
+const activeCtxPath = path.join(__dirname, '.harness', 'context', 'activeContext.md');
+if (fs.existsSync(activeCtxPath)) {
+  console.log('  ℹ️   context/activeContext.md presente ✅');
+} else {
+  console.log('  ⚠️   context/activeContext.md no encontrado (recomendado)');
+}
+
+const progressCtxPath = path.join(__dirname, '.harness', 'context', 'progress.md');
+if (fs.existsSync(progressCtxPath)) {
+  console.log('  ℹ️   context/progress.md presente ✅');
+} else {
+  console.log('  ⚠️   context/progress.md no encontrado (recomendado)');
+}
+
+// Resto de la capa de memoria (índice + estables) — recomendados, no bloquean
+['index.md', 'plans-index.md', 'productContext.md', 'systemPatterns.md', 'techContext.md']
+  .forEach(function (f) {
+    if (fs.existsSync(path.join(__dirname, '.harness', 'context', f))) {
+      console.log('  ℹ️   context/' + f + ' presente ✅');
+    } else {
+      console.log('  ⚠️   context/' + f + ' no encontrado (recomendado)');
+    }
+  });
+
+// ──────────────────────────────────────────────────────
+// BLOQUE 3 — Verificación del Stack (VARIABLE)
+// Descomentar o añadir por la IA durante el setup
+// ──────────────────────────────────────────────────────
+console.log("\n  ▸ [4/4] Verificación del Stack Técnico");
+
+/* Ejemplo Node:
+try {
+  const nodeVer = execSync('node -v').toString().trim();
+  check(`Node disponible (${nodeVer})`, true);
+} catch (e) {
+  check("Node disponible", false, "node no instalado");
+}
+
+// runCommand("Los tests pasan", "npm run test --silent");
+*/
+
+check("Stack técnico pendiente de configurar por el Orquestador", true);
+
+// ══════════════════════════════════════════════════════
+// RESULTADO FINAL
+// ══════════════════════════════════════════════════════
+console.log("\n══════════════════════════════════════════════════");
+if (fail === 0) {
+  console.log(`  ✅  [HARNESS OK] — ${pass} verificaciones pasadas`);
+  console.log("  El agente puede continuar con la tarea.");
+  console.log("══════════════════════════════════════════════════\n");
+  process.exit(0);
+} else {
+  console.log(`  ❌  [HARNESS FAIL] — ${fail} fallo(s) de ${pass + fail} verificaciones`);
+  console.log("");
+  errors.forEach(err => console.log(`     •  ${err}`));
+  console.log("\n  ⚠️ EL AGENTE NO DEBE CONTINUAR HASTA RESOLVER LOS ERRORES.");
+  console.log("══════════════════════════════════════════════════\n");
+  process.exit(1);
+}

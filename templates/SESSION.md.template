@@ -1,0 +1,15 @@
+# 💻 SESSION — Área de Trabajo Activa
+> **Tarea:** [ID / Nombre de Tarea]
+> ¡Esta es tu pizarra temporal! Anota aquí tus pasos, comandos, tests y hallazgos.
+> Al terminar, ejecuta `node scripts/harness-finish.js --task [ID_tarea]`
+
+## 📝 Diario de Ejecución
+[Anota aquí el "razonamiento en voz alta", comandos ejecutados, y output de errores si los hay]
+
+## ⚠️ Impactos Cruzados
+- [Anota aquí si tus cambios han roto o modificado algo que otro agente deba saber]
+
+## ✅ Reporte Final (Hand-off)
+- **Status:** [COMPLETADO | BLOQUEADO]
+- **Resumen:** [1 frase de qué se entregó o qué bloqueó]
+- **Commit:** [Hash o mensaje del commit sugerido]

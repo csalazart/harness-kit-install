@@ -1,0 +1,50 @@
+# .graphifyignore — Exclusiones para graphify
+# Igual que .gitignore: define qué archivos/carpetas NO se escanean al construir el grafo.
+# Útil para ignorar dependencias, builds generados, logs, etc.
+
+# Dependencias
+node_modules/
+vendor/
+.venv/
+venv/
+env/
+
+# Builds generados
+dist/
+build/
+out/
+.next/
+.nuxt/
+.output/
+
+# Herramientas y configuración
+.git/
+.harness/
+graphify-out/
+.cache/
+coverage/
+.nyc_output/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Archivos temporales
+*.tmp
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Documentación generada (si aplica)
+docs/generated/
+api-docs/
+
+# Archivos sensibles (no incluir en el grafo)
+*.pem
+*.key
+.env
+.env.*

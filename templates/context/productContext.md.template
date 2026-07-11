@@ -1,0 +1,21 @@
+# 🎯 productContext — Contexto de Producto
+> Fichero ESTABLE — leer bajo demanda (FULL LOAD)
+> Solo el Orquestador actualiza este fichero
+
+## Por qué existe este proyecto
+{{WHY_EXISTS}}
+
+## Situación actual (antes de este proyecto)
+{{CURRENT_SITUATION}}
+
+## Experiencia objetivo (después de este proyecto)
+{{TARGET_EXPERIENCE}}
+
+## Métricas de éxito
+- [pendiente de definir]
+
+## Decisiones de producto tomadas
+- {{DATE}}: Proyecto iniciado con stack {{TECH_STACK}}
+
+## Contexto de negocio / equipo
+{{BUSINESS_CONTEXT}}

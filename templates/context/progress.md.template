@@ -1,0 +1,23 @@
+# 📊 progress — Estado por Módulos
+> Fichero VOLÁTIL — actualizado por harness-finish.js y el Orquestador
+> Límite recomendado: 60 líneas
+>
+> NOTA para el agente que genera este fichero: sustituye {{MODULES_TABLE}} con una fila
+> por cada módulo respondido en Q6 del cuestionario. Formato de cada fila:
+> | nombre-modulo | ⬜ Sin empezar | 0% | — | — |
+
+## Semáforos de Módulos
+
+| Módulo | Estado | % | Notas | Plan |
+|--------|--------|---|-------|------|
+{{MODULES_TABLE}}
+
+## Leyenda de estados
+- ✅ Completado
+- 🔄 En progreso
+- ⏳ Pendiente (desbloqueado pero sin empezar)
+- ❌ Bloqueado (con impacto cruzado o decisión pendiente)
+- ⬜ Sin empezar
+
+## Notas del Orquestador
+- (añadir contexto relevante sobre el estado global aquí)

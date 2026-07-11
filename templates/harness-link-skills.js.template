@@ -1,0 +1,172 @@
+#!/usr/bin/env node
+/**
+ * harness-link-skills.js — Enlaza .harness/skills/ con la carpeta de skills del agente IA activo
+ * Generado por harness-kit · Proyecto: {{PROJECT_NAME}}
+ *
+ * USO: node scripts/harness-link-skills.js
+ *
+ * Detecta automáticamente qué agentes IA están configurados en el proyecto
+ * y crea un symlink (o copia si el symlink falla) de .harness/skills/ hacia
+ * la carpeta que cada agente espera encontrar.
+ *
+ * Agentes soportados:
+ *   Claude Code  →  .claude/skills/
+ *   Gemini       →  .gemini/skills/
+ *   Estándar     →  .agents/skills/   (OpenAI, Qwen, xAI, Llama y otros)
+ */
+
+const fs   = require('fs');
+const path = require('path');
+
+const ROOT         = __dirname.replace(/[\\/]scripts$/, '');
+const SKILLS_SRC   = path.join(ROOT, '.harness', 'skills');
+
+// Agentes conocidos: [carpeta raíz del agente, subcarpeta skills esperada]
+const AGENTS = [
+  { name: 'Claude Code', root: '.claude',  skills: path.join(ROOT, '.claude',  'skills') },
+  { name: 'Gemini',      root: '.gemini',  skills: path.join(ROOT, '.gemini',  'skills') },
+  { name: 'Estándar (.agents)', root: '.agents', skills: path.join(ROOT, '.agents', 'skills') },
+];
+
+// ─────────────────────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────────────────────
+
+function agentRootExists(agent) {
+  return fs.existsSync(path.join(ROOT, agent.root));
+}
+
+function skillsAlreadyLinked(target) {
+  try {
+    const stat = fs.lstatSync(target);
+    if (stat.isSymbolicLink()) {
+      const linkTarget = fs.readlinkSync(target);
+      return linkTarget === SKILLS_SRC || path.resolve(path.dirname(target), linkTarget) === SKILLS_SRC;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+function trySymlink(target) {
+  try {
+    // En Windows el tipo debe ser 'junction' para no requerir permisos de admin
+    const type = process.platform === 'win32' ? 'junction' : 'dir';
+    fs.symlinkSync(SKILLS_SRC, target, type);
+    return { ok: true, method: 'symlink' };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
+function copyDir(src, dest) {
+  fs.mkdirSync(dest, { recursive: true });
+  const entries = fs.readdirSync(src, { withFileTypes: true });
+  for (const entry of entries) {
+    const srcPath  = path.join(src, entry.name);
+    const destPath = path.join(dest, entry.name);
+    if (entry.isDirectory()) {
+      copyDir(srcPath, destPath);
+    } else {
+      fs.copyFileSync(srcPath, destPath);
+    }
+  }
+}
+
+function tryCopy(target) {
+  try {
+    copyDir(SKILLS_SRC, target);
+    return { ok: true, method: 'copia' };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// Main
+// ─────────────────────────────────────────────────────────────
+
+console.log('\n══════════════════════════════════════════════════');
+console.log('  HARNESS LINK SKILLS — {{PROJECT_NAME}}');
+console.log('══════════════════════════════════════════════════\n');
+
+// Verificar que existe la fuente
+if (!fs.existsSync(SKILLS_SRC)) {
+  console.log('  ⚠️  No existe .harness/skills/ — nada que enlazar.');
+  console.log('     Crea al menos un skill en .harness/skills/ primero.\n');
+  console.log('══════════════════════════════════════════════════\n');
+  process.exit(0);
+}
+
+// Detectar agentes activos
+const activeAgents = AGENTS.filter(agentRootExists);
+
+if (activeAgents.length === 0) {
+  console.log('  ℹ️  No se detectó ninguna carpeta de agente IA.');
+  console.log('     (.claude/, .gemini/, .agents/ no existen en este proyecto)');
+  console.log('\n  💡 Si usas un agente IA, crea su carpeta raíz y vuelve a ejecutar');
+  console.log('     este script. Ejemplo: mkdir .claude\n');
+  console.log('══════════════════════════════════════════════════\n');
+  process.exit(0);
+}
+
+console.log(`  Agentes detectados: ${activeAgents.map(a => a.name).join(', ')}\n`);
+
+let linked = 0;
+let failed = 0;
+
+for (const agent of activeAgents) {
+  const target = agent.skills;
+
+  // Ya enlazado correctamente → saltar
+  if (skillsAlreadyLinked(target)) {
+    console.log(`  ✅  ${agent.name}: ya enlazado (.${agent.root}/skills/)`);
+    linked++;
+    continue;
+  }
+
+  // Si existe pero NO es symlink → puede ser una copia anterior
+  if (fs.existsSync(target)) {
+    console.log(`  ℹ️  ${agent.name}: ya existe .${agent.root}/skills/ (no es symlink, se conserva)`);
+    linked++;
+    continue;
+  }
+
+  // Asegurar que existe la carpeta raíz del agente
+  fs.mkdirSync(path.join(ROOT, agent.root), { recursive: true });
+
+  // Intentar symlink primero
+  const symResult = trySymlink(target);
+  if (symResult.ok) {
+    console.log(`  ✅  ${agent.name}: symlink creado → .${agent.root}/skills/`);
+    linked++;
+    continue;
+  }
+
+  // Fallback: copia
+  console.log(`  ⚠️  ${agent.name}: symlink falló (${symResult.error})`);
+  console.log(`      → Intentando copia de ficheros...`);
+  const copyResult = tryCopy(target);
+  if (copyResult.ok) {
+    console.log(`  ✅  ${agent.name}: copiado → .${agent.root}/skills/`);
+    console.log(`      ⚠️  Recuerda: la copia NO se sincroniza automáticamente.`);
+    console.log(`          Vuelve a ejecutar este script si añades skills nuevos.`);
+    linked++;
+  } else {
+    console.log(`  ❌  ${agent.name}: falló también la copia (${copyResult.error})`);
+    failed++;
+  }
+}
+
+// Resultado final
+console.log('\n══════════════════════════════════════════════════');
+if (failed === 0) {
+  console.log(`  ✅  [SKILLS OK] — ${linked} agente(s) con skills disponibles`);
+} else {
+  console.log(`  ❌  [SKILLS PARCIAL] — ${linked} OK · ${failed} fallido(s)`);
+  console.log('      Revisa los errores de arriba y vuelve a ejecutar.');
+}
+console.log('══════════════════════════════════════════════════\n');
+
+process.exit(failed > 0 ? 1 : 0);

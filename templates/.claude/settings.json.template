@@ -1,0 +1,27 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "command": "node init.js"
+      }
+    ],
+    "Stop": [
+      {
+        "command": "node init.js"
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(node init.js*)",
+      "Bash(node scripts/*)",
+      "Bash(git add *)",
+      "Bash(git commit -m *)",
+      "Bash(git status*)",
+      "Bash(git log*)",
+      "Bash(graphify *)"
+    ],
+    "deny": []
+  }
+}

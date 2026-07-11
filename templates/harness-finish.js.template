@@ -1,0 +1,219 @@
+#!/usr/bin/env node
+
+/**
+ * harness-finish.js
+ * Archiva la sesión de una tarea, actualiza STATE.md y limpia el workspace.
+ * Uso: node scripts/harness-finish.js --task nombre_tarea
+ */
+
+const fs = require('fs');
+const path = require('path');
+
+// Obtener argumentos
+const args = process.argv.slice(2);
+const taskIndex = args.indexOf('--task');
+
+if (taskIndex === -1 || !args[taskIndex + 1]) {
+  console.error("❌ Error: Debes especificar el nombre de la tarea a finalizar.");
+  console.error("Uso: node scripts/harness-finish.js --task nombre_tarea");
+  process.exit(1);
+}
+
+const taskName = args[taskIndex + 1].replace(/[^a-zA-Z0-9_-]/g, '_');
+const workspaceDir = path.join('.harness', 'workspaces', taskName);
+const logsDir = path.join('.harness', 'logs');
+const statePath = path.join('.harness', 'STATE.md');
+
+// Verificar que el workspace existe
+if (!fs.existsSync(workspaceDir)) {
+  console.error(`❌ Error: No se encontró el workspace para: ${taskName}`);
+  console.error(`Buscado en: ${workspaceDir}`);
+  process.exit(1);
+}
+
+// Crear carpeta de logs si no existe
+if (!fs.existsSync(logsDir)) {
+  fs.mkdirSync(logsDir, { recursive: true });
+}
+
+// ─────────────────────────────────────────────────────────
+// 1. Archivar orden.md + session.md en logs/
+// ─────────────────────────────────────────────────────────
+const dateStr = new Date().toISOString().replace(/T/, '_').replace(/\..+/, '').replace(/[-:]/g, '');
+const archiveFilePath = path.join(logsDir, `${dateStr}_${taskName}.md`);
+
+let archiveContent = `# 📜 Log de Tarea: ${taskName}\n> Archivada el: ${new Date().toISOString()}\n\n`;
+
+const ordenPath = path.join(workspaceDir, 'orden.md');
+if (fs.existsSync(ordenPath)) {
+  archiveContent += `---\n${fs.readFileSync(ordenPath, 'utf8')}\n\n`;
+}
+
+const sessionPath = path.join(workspaceDir, 'session.md');
+let sessionContent = '';
+let status = 'COMPLETADO';
+let resumen = '';
+let commitMsg = '';
+
+if (fs.existsSync(sessionPath)) {
+  sessionContent = fs.readFileSync(sessionPath, 'utf8');
+  archiveContent += `---\n${sessionContent}\n`;
+
+  const statusMatch = sessionContent.match(/-\s*\*\*Status:\*\*\s*\[?([^\]\n]+)\]?/i);
+  if (statusMatch) status = statusMatch[1].trim().toUpperCase();
+
+  const resumenMatch = sessionContent.match(/-\s*\*\*Resumen:\*\*\s*(.+)/i);
+  if (resumenMatch) resumen = resumenMatch[1].trim().replace(/^\[|\]$/g, '');
+
+  const commitMatch = sessionContent.match(/-\s*\*\*Commit:\*\*\s*(.+)/i);
+  if (commitMatch) commitMsg = commitMatch[1].trim().replace(/^\[|\]$/g, '');
+}
+
+fs.writeFileSync(archiveFilePath, archiveContent);
+console.log(`✅ Sesión archivada en: ${archiveFilePath}`);
+
+// ─────────────────────────────────────────────────────────
+// 2. Marcar la tarea en STATE.md
+// ─────────────────────────────────────────────────────────
+if (status === 'COMPLETADO' && fs.existsSync(statePath)) {
+  let stateContent = fs.readFileSync(statePath, 'utf8');
+  const cleanTaskName = taskName.replace(/_/g, ' ');
+  const lines = stateContent.split('\n');
+  let updated = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    const lineNorm = lines[i].toLowerCase().replace(/_/g, ' ');
+    if (lines[i].match(/^-\s*\[\s\]/i) && lineNorm.includes(cleanTaskName.toLowerCase())) {
+      lines[i] = lines[i].replace(/^-\s*\[\s\]/i, '- [x]');
+      updated = true;
+      break;
+    }
+  }
+
+  if (updated) {
+    fs.writeFileSync(statePath, lines.join('\n'));
+    console.log(`✅ Tarea marcada como [x] en STATE.md`);
+  } else {
+    console.log(`⚠️  No se pudo auto-marcar la tarea en STATE.md. Actualízala manualmente.`);
+  }
+}
+
+// ─────────────────────────────────────────────────────────
+// 3. Actualizar SUMMARY.md (entrada nueva al principio)
+// ─────────────────────────────────────────────────────────
+const summaryPath = path.join(logsDir, 'SUMMARY.md');
+const dateTime = new Date().toISOString().replace('T', ' ').substring(0, 16);
+const statusEmoji = status === 'COMPLETADO' ? '✅' : '⚠️';
+
+let summaryEntry = `### ${dateTime} — ${taskName} — ${statusEmoji} ${status}\n`;
+if (resumen) summaryEntry += `${resumen}\n`;
+if (commitMsg && commitMsg !== resumen) summaryEntry += `_${commitMsg}_\n`;
+summaryEntry += '\n';
+
+const summaryHeader =
+`# 📋 SUMMARY — Historial de tareas completadas
+> Las entradas más recientes aparecen primero.
+> Para archivar: renombra este fichero a \`logs/SUMMARY-FECHA.md\` y el siguiente cierre creará uno nuevo.
+
+`;
+
+if (!fs.existsSync(summaryPath)) {
+  // Primera vez: crear fichero con cabecera + primera entrada
+  fs.writeFileSync(summaryPath, summaryHeader + summaryEntry);
+} else {
+  // Fichero existe: insertar nueva entrada justo después de la cabecera
+  const existing = fs.readFileSync(summaryPath, 'utf8');
+  const headerEnd = existing.indexOf('\n\n');
+  if (headerEnd !== -1) {
+    const headerPart = existing.substring(0, headerEnd + 2); // cabecera + \n\n
+    const entriesPart = existing.substring(headerEnd + 2);   // entradas anteriores
+    fs.writeFileSync(summaryPath, headerPart + summaryEntry + entriesPart);
+  } else {
+    // Fichero malformado — añadir al final
+    fs.writeFileSync(summaryPath, existing + '\n' + summaryEntry);
+  }
+}
+console.log(`📋 Entrada añadida en: ${summaryPath}`);
+
+// ─────────────────────────────────────────────────────────
+// 4. Eliminar el workspace
+// ─────────────────────────────────────────────────────────
+try {
+  fs.rmSync(workspaceDir, { recursive: true, force: true });
+  console.log(`🧹 Workspace limpiado: ${taskName}`);
+} catch (e) {
+  console.log(`⚠️  No se pudo eliminar el workspace. Bórralo manualmente: ${workspaceDir}`);
+}
+
+// ─────────────────────────────────────────────────────────
+// 5. Actualizar capa de contexto (si existe)
+// ─────────────────────────────────────────────────────────
+const ACTIVE_CONTEXT_MAX_ENTRIES = 5;
+
+function updateActiveContext(taskName, status, resumen, today) {
+  const contextPath = path.join('.harness', 'context', 'activeContext.md');
+  if (!fs.existsSync(contextPath)) return;
+
+  let content = fs.readFileSync(contextPath, 'utf8');
+  const timestamp = new Date().toISOString().replace('T', ' ').slice(0, 16);
+
+  content = content.replace(
+    /- \*\*Último cambio:\*\*.*/,
+    `- **Último cambio:** ${taskName} — ${status} (${today})`
+  );
+  content = content.replace(
+    /- \*\*Próximo paso:\*\*.*/,
+    `- **Próximo paso:** (Orquestador: revisar STATE.md para siguiente tarea)`
+  );
+
+  const sectionMarker = '## Resumen de última sesión\n';
+  const sectionIdx = content.indexOf(sectionMarker);
+  if (sectionIdx !== -1) {
+    const afterMarker = content.slice(sectionIdx + sectionMarker.length);
+    const allLines = afterMarker.split('\n');
+    const entryLines = allLines.filter(l => l.startsWith('- '));
+    const otherLines = allLines.filter(l => !l.startsWith('- '));
+    const newEntry = `- ${timestamp}: Tarea "${taskName}" → ${status}. ${resumen}`;
+    const trimmed = [newEntry, ...entryLines].slice(0, ACTIVE_CONTEXT_MAX_ENTRIES);
+    const rebuilt = [...trimmed, ...otherLines].join('\n');
+    content = content.slice(0, sectionIdx + sectionMarker.length) + rebuilt;
+  }
+
+  fs.writeFileSync(contextPath, content);
+  console.log('📝 activeContext.md actualizado');
+}
+
+function updateProgress(taskName, status) {
+  const progressPath = path.join('.harness', 'context', 'progress.md');
+  if (!fs.existsSync(progressPath)) return;
+
+  let content = fs.readFileSync(progressPath, 'utf8');
+  const cleanTask = taskName.replace(/_/g, ' ').toLowerCase();
+  const lines = content.split('\n');
+  let updated = false;
+
+  const newLines = lines.map(line => {
+    const lowerLine = line.toLowerCase();
+    if (lowerLine.includes('| ' + cleanTask) || lowerLine.includes('|' + cleanTask)) {
+      if (status === 'COMPLETADO') {
+        updated = true;
+        return line.replace(/⬜|🔄|⏳|❌/, '✅').replace(/\d+%/, '100%');
+      } else if (status === 'BLOQUEADO') {
+        updated = true;
+        return line.replace(/⬜|🔄|⏳/, '❌');
+      }
+    }
+    return line;
+  });
+
+  if (updated) {
+    fs.writeFileSync(progressPath, newLines.join('\n'));
+    console.log('📊 progress.md actualizado');
+  }
+}
+
+const todayStr = dateStr.slice(0, 8);
+updateActiveContext(taskName, status, resumen, todayStr);
+updateProgress(taskName, status);
+
+console.log(`\n🎉 [HARNESS FINISH OK] — ${taskName} procesada correctamente.`);

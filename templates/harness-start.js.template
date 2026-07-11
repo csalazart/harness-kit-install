@@ -1,0 +1,127 @@
+#!/usr/bin/env node
+
+/**
+ * harness-start.js
+ * Crea un workspace aislado para una tarea específica.
+ * Uso: node scripts/harness-start.js --task nombre_tarea
+ *
+ * Si la tarea existe en .harness/STATE.md, pre-rellena el título en orden.md.
+ */
+
+const fs = require('fs');
+const path = require('path');
+
+// Obtener argumentos
+const args = process.argv.slice(2);
+const taskIndex = args.indexOf('--task');
+
+if (taskIndex === -1 || !args[taskIndex + 1]) {
+  console.error("❌ Error: Debes especificar el nombre de la tarea.");
+  console.error("Uso: node scripts/harness-start.js --task nombre_tarea");
+  process.exit(1);
+}
+
+const taskName = args[taskIndex + 1].replace(/[^a-zA-Z0-9_-]/g, '_');
+const workspaceDir = path.join('.harness', 'workspaces', taskName);
+const statePath = path.join('.harness', 'STATE.md');
+
+// Buscar descripción de la tarea en STATE.md
+let taskDesc = '';
+if (fs.existsSync(statePath)) {
+  const stateContent = fs.readFileSync(statePath, 'utf8');
+  const cleanName = taskName.replace(/_/g, ' ').toLowerCase();
+  for (const line of stateContent.split('\n')) {
+    if (line.match(/^-\s*\[[ x]?\]/i) && line.toLowerCase().replace(/_/g, ' ').includes(cleanName)) {
+      const match = line.match(/^-\s*\[[ x]?\]\s*(?:[A-Z0-9]+:\s*)?(.+)/i);
+      if (match) {
+        taskDesc = match[1].trim();
+        break;
+      }
+    }
+  }
+}
+
+const today = new Date().toISOString().split('T')[0];
+const objetivoPlaceholder = taskDesc
+  ? taskDesc
+  : '[El Orquestador describe aquí exactamente qué se debe lograr]';
+
+const ordenTemplate =
+`# 🚀 ORDEN DE TRABAJO
+> **Tarea:** ${taskName}
+> **Fecha:** ${today}
+${taskDesc ? `> **Descripción:** ${taskDesc}` : ''}
+
+## 🎯 Objetivo de esta sesión
+${objetivoPlaceholder}
+
+## 📋 Criterios de aceptación
+- [ ] Criterio 1
+- [ ] Criterio 2
+`;
+
+const sessionTemplate =
+`# 💻 SESSION — Área de Trabajo Activa
+> **Tarea:** ${taskName}
+> ¡Esta es tu pizarra temporal! Anota aquí tus pasos, comandos, tests y hallazgos.
+> Al terminar, ejecuta \`node scripts/harness-finish.js --task ${taskName}\`
+
+## 📝 Diario de Ejecución
+
+
+## ⚠️ Impactos Cruzados
+- [Ninguno por ahora]
+
+## ✅ Reporte Final (Hand-off)
+- **Status:** [COMPLETADO | BLOQUEADO]
+- **Resumen:** [1 frase de qué se entregó o qué bloqueó]
+- **Commit:** [Hash o mensaje sugerido]
+`;
+
+// Crear directorios
+if (!fs.existsSync(workspaceDir)) {
+  fs.mkdirSync(workspaceDir, { recursive: true });
+}
+
+// Escribir ficheros si no existen
+const ordenPath = path.join(workspaceDir, 'orden.md');
+const sessionPath = path.join(workspaceDir, 'session.md');
+
+if (!fs.existsSync(ordenPath)) fs.writeFileSync(ordenPath, ordenTemplate);
+if (!fs.existsSync(sessionPath)) fs.writeFileSync(sessionPath, sessionTemplate);
+
+// Actualizar activeContext.md para registrar tarea en progreso
+function markTaskInProgress(taskName, taskDesc) {
+  const contextPath = path.join('.harness', 'context', 'activeContext.md');
+  if (!fs.existsSync(contextPath)) return;
+
+  let content = fs.readFileSync(contextPath, 'utf8');
+  const timestamp = new Date().toISOString().replace('T', ' ').slice(0, 16);
+
+  content = content.replace(
+    /- \*\*Próximo paso:\*\*.*/,
+    `- **Próximo paso:** Completar tarea en progreso: ${taskName}`
+  );
+
+  const sectionMarker = '## Resumen de última sesión\n';
+  const idx = content.indexOf(sectionMarker);
+  if (idx !== -1) {
+    const desc = taskDesc ? taskDesc : 'sin descripción en STATE.md';
+    const newEntry = `- ${timestamp}: Workspace abierto para "${taskName}" — ${desc}\n`;
+    content = content.slice(0, idx + sectionMarker.length) +
+              newEntry +
+              content.slice(idx + sectionMarker.length);
+  }
+
+  fs.writeFileSync(contextPath, content);
+  console.log('📝 activeContext.md actualizado — tarea en progreso registrada');
+}
+
+markTaskInProgress(taskName, taskDesc);
+
+console.log(`\n✅ Workspace creado para: ${taskName}`);
+if (taskDesc) console.log(`📌 Descripción importada desde STATE.md: "${taskDesc}"`);
+console.log(`📂 Ruta: ${workspaceDir}`);
+console.log(`\nSiguiente paso:`);
+console.log(`1. Orquestador: completa los criterios en ${ordenPath}`);
+console.log(`2. Especialista: trabaja y documenta en ${sessionPath}`);

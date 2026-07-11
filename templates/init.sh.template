@@ -1,0 +1,155 @@
+#!/usr/bin/env bash
+# init.sh — Verificación del entorno del proyecto (alternativa Bash)
+# Generado por harness-kit · Proyecto: {{PROJECT_NAME}}
+#
+# USO: ./init.sh
+# Devuelve exit 0 si todo OK, exit 1 si hay errores.
+#
+# NOTA: Se recomienda usar init.js (Node.js, cross-platform) en lugar de este script.
+#       init.sh es una alternativa para entornos Bash puros sin Node.js disponible.
+#       Ambos scripts verifican las mismas condiciones y emiten los mismos mensajes.
+#
+# ═══════════════════════════════════════════════════════════
+# BLOQUE 1 — Verificación del Harness  (FIJO, no modificar)
+# BLOQUE 2 — Verificación del Stack    (VARIABLE, rellenar al inicializar)
+# ═══════════════════════════════════════════════════════════
+
+set -uo pipefail
+
+PASS=0
+FAIL=0
+ERRORS=()
+
+check() {
+  local desc="$1"
+  local ok="$2"   # "ok" o mensaje de error
+  if [ "$ok" = "ok" ]; then
+    echo "  ✅  $desc"
+    ((PASS++)) || true
+  else
+    echo "  ❌  $desc"
+    echo "       → $ok"
+    ((FAIL++)) || true
+    ERRORS+=("$desc")
+  fi
+}
+
+run_check() {
+  # Ejecuta un comando y devuelve "ok" o el error
+  local desc="$1"; shift
+  if output=$("$@" 2>&1); then
+    check "$desc" "ok"
+  else
+    check "$desc" "$output"
+  fi
+}
+
+echo ""
+echo "══════════════════════════════════════════════════"
+echo "  HARNESS INIT — {{PROJECT_NAME}}"
+echo "══════════════════════════════════════════════════"
+
+# ──────────────────────────────────────────────────────
+# BLOQUE 1 — Verificación del Harness (FIJO)
+# Comprueba la estructura del harness, independiente del stack.
+# No modificar este bloque.
+# ──────────────────────────────────────────────────────
+echo ""
+echo "  ▸ [1/2] Estructura del Harness"
+
+# Archivos base obligatorios
+[ -f "AGENTS.md" ]              && check "AGENTS.md existe"              "ok" \
+                                || check "AGENTS.md existe"              "archivo no encontrado"
+
+[ -f ".harness/STATE.md" ]      && check ".harness/STATE.md existe"   "ok" \
+                                || check ".harness/STATE.md existe"   "archivo no encontrado"
+
+[ -f "scripts/harness-start.js" ] && check "scripts/harness-start.js existe" "ok" \
+                                || check "scripts/harness-start.js existe" "archivo no encontrado"
+
+[ -f "scripts/harness-finish.js" ] && check "scripts/harness-finish.js existe" "ok" \
+                                || check "scripts/harness-finish.js existe" "archivo no encontrado"
+
+# Máximo de tareas (Solo informativo en Lean)
+if [ -f ".harness/STATE.md" ]; then
+  PENDING=$(grep -c "^-\s*\[\s\]" .harness/STATE.md || echo "0")
+  check "Tareas pendientes en STATE.md: $PENDING" "ok"
+fi
+
+# ──────────────────────────────────────────────────────
+# BLOQUE 2 — Verificación del Stack (VARIABLE)
+#
+# Este bloque se rellena durante prompts/01_init.md,
+# cuando la IA detecta el stack del proyecto.
+# Descomenta y adapta la sección que corresponda.
+# ──────────────────────────────────────────────────────
+echo ""
+echo "  ▸ [2/2] Verificación del Stack"
+
+# ── Node.js / pnpm ────────────────────────────────────
+# command -v node &>/dev/null \
+#   && check "node   $(node -v)" "ok" \
+#   || check "node disponible"   "no instalado — https://nodejs.org"
+# command -v pnpm &>/dev/null \
+#   && check "pnpm   $(pnpm -v)" "ok" \
+#   || check "pnpm disponible"   "no instalado — npm i -g pnpm"
+# pnpm test --silent 2>&1 | tail -3 \
+#   && check "tests pasan" "ok" \
+#   || check "tests pasan"       "hay tests fallando — ejecuta: pnpm test"
+
+# ── Python ────────────────────────────────────────────
+# command -v python3 &>/dev/null \
+#   && check "python3  $(python3 --version)" "ok" \
+#   || check "python3 disponible" "no instalado"
+# python3 -m unittest discover -s tests -q 2>&1 | tail -3 \
+#   && check "tests pasan" "ok" \
+#   || check "tests pasan"        "hay tests fallando — ejecuta: python3 -m unittest discover"
+
+# ── PHP ───────────────────────────────────────────────
+# command -v php &>/dev/null \
+#   && check "php  $(php -r 'echo PHP_VERSION;')" "ok" \
+#   || check "php disponible" "no instalado"
+# ./vendor/bin/phpunit --testdox 2>&1 | tail -3 \
+#   && check "tests pasan" "ok" \
+#   || check "tests pasan"        "hay tests fallando — ejecuta: ./vendor/bin/phpunit"
+
+# ── Docker / Compose ──────────────────────────────────
+# command -v docker &>/dev/null \
+#   && check "docker disponible" "ok" \
+#   || check "docker disponible" "no instalado"
+# docker compose ps 2>&1 | grep -q "running" \
+#   && check "servicios corriendo" "ok" \
+#   || check "servicios corriendo" "revisar: docker compose ps"
+
+# ── Rust / Cargo ──────────────────────────────────────
+# command -v cargo &>/dev/null \
+#   && check "cargo  $(cargo --version)" "ok" \
+#   || check "cargo disponible" "no instalado — https://rustup.rs"
+# cargo test --quiet 2>&1 | tail -3 \
+#   && check "tests pasan" "ok" \
+#   || check "tests pasan"        "hay tests fallando — ejecuta: cargo test"
+
+# ── Placeholder (sin stack definido aún) ─────────────
+check "Stack pendiente de configurar" "ok"
+echo "       ℹ️   Ejecutar prompts/01_init.md para completar este bloque"
+
+# ══════════════════════════════════════════════════════
+# RESULTADO FINAL
+# ══════════════════════════════════════════════════════
+echo ""
+echo "══════════════════════════════════════════════════"
+if [ "$FAIL" -eq 0 ]; then
+  echo "  ✅  [HARNESS OK] — $PASS verificaciones pasadas"
+  echo "  El agente puede continuar con la tarea."
+else
+  echo "  ❌  [HARNESS FAIL] — $FAIL fallo(s) de $((PASS + FAIL)) verificaciones"
+  echo ""
+  for err in "${ERRORS[@]}"; do
+    echo "     •  $err"
+  done
+  echo ""
+  echo "  ⚠️  EL AGENTE NO DEBE CONTINUAR HASTA RESOLVER LOS ERRORES."
+fi
+echo "══════════════════════════════════════════════════"
+echo ""
+[ "$FAIL" -eq 0 ] && exit 0 || exit 1

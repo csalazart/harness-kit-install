@@ -1,0 +1,31 @@
+# 🏗️ systemPatterns — Patrones y Decisiones Arquitectónicas
+> Fichero ESTABLE — leer bajo demanda (FULL LOAD)
+> Solo el Orquestador actualiza este fichero
+
+## Arquitectura general
+{{ARCHITECTURE_OVERVIEW}}
+
+## Decisiones técnicas clave
+
+| ID | Decisión | Fecha | Razón | Impacto |
+|----|----------|-------|-------|---------|
+| D001 | Stack: {{TECH_STACK}} | {{DATE}} | Selección inicial del proyecto | Global |
+
+## Patrones de diseño en uso
+- (se documentará conforme avance el proyecto)
+
+## Estructura de carpetas del proyecto
+```
+{{PROJECT_STRUCTURE}}
+```
+
+## Relaciones entre componentes
+- (diagrama o descripción de las dependencias clave)
+
+## Lo que NUNCA cambia (invariantes del sistema)
+- (definir conforme se establezcan decisiones irrevocables)
+
+## Dependencias críticas y sus versiones
+| Dependencia | Versión | Motivo |
+|---|---|---|
+| (ver techContext.md para el detalle completo) | — | — |
