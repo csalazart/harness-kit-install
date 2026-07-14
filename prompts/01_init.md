@@ -80,9 +80,10 @@ Crea las siguientes carpetas para la arquitectura Task-Driven:
 
 ### 5. Documentación y Reglas Técnicas
 Copia el fichero maestro universal `harness-kit/templates/AGENTS.md.template` a `AGENTS.md`.
+Crea la carpeta `docs/` en la raíz (si no existe) y copia `harness-kit/templates/docs/AGENTS_REFERENCE.md.template` a `docs/AGENTS_REFERENCE.md`.
 
-> ⚠️ **Si ya existe un AGENTS.md en el proyecto: FUSIONA, nunca sobrescribas.**
-> Conserva al final del AGENTS.md generado cualquier sección ajena al harness-kit
+> ⚠️ **Si ya existe un AGENTS.md o un docs/AGENTS_REFERENCE.md en el proyecto: FUSIONA, nunca sobrescribas.**
+> Conserva al final del AGENTS.md/docs/AGENTS_REFERENCE.md generado cualquier sección ajena al harness-kit
 > (por ejemplo "## Cerebro OKF" de harness-okf, u otras de terceros). Mismo criterio
 > con CLAUDE.md: conserva el import `@AGENTS.md` y las secciones ajenas existentes.
 

@@ -1,14 +1,16 @@
 # AGENTS.md — {{PROJECT_NAME}}
 > **Este archivo es el protocolo universal de este proyecto.**
 > Aplica a cualquier IA, herramienta o agente. Léelo completo antes de hacer cualquier otra cosa.
+>
+> ⚡ **Versión híbrida optimizada para contexto.** El detalle puramente informativo se ha delegado a `docs/AGENTS_REFERENCE.md`.
+> El protocolo de arranque, flujo de workspaces y reglas operativas críticas SE MANTIENEN aquí para evitar degradación conductual de la IA.
 
 ---
 
 ## Para cualquier IA: empieza aquí
 
 > Si eres una IA y acabas de abrir este proyecto, este es tu punto de entrada.
-> No importa si eres Claude, Gemini, Codex, Kimi, Qwen, Cursor o cualquier otro modelo.
-> El protocolo es el mismo para todos.
+> El protocolo de handshake, flujo de workspaces y reglas universales son de obligado cumplimiento.
 
 ---
 
@@ -17,24 +19,30 @@
 > Ejecutar esta secuencia ANTES de responder al usuario o tocar cualquier archivo.
 
 **Paso 0 — FAST LOAD (contexto de sesión):**
-Si existen los ficheros de contexto, leer estos 3 en orden — total ~150 líneas:
+Si existen los ficheros de contexto, leer estos en orden — total ~120 líneas:
 1. `.harness/context/activeContext.md` — ¿dónde estamos? ¿hay tarea en progreso?
 2. `.harness/context/progress.md` — estado por módulos
-3. `.harness/context/plans-index.md` — planes activos
+3. `.harness/context/plans-index.md` — planes activos (saltar en FAST LOAD EXTREME si no se requieren)
 
-> Mapa completo de la memoria (qué leer y cuándo): `.harness/context/index.md`
+> Mapa de la memoria: si no se dispone de `graphify`, lee `.harness/context/index.md` como índice principal de archivos.
 
 Mostrar resumen compacto tras leerlos:
 ```
 Contexto cargado: [proyecto] | Rama: [rama] | Próximo: [próximo paso] | Bloqueantes: [ninguno/lista]
 ```
 
-**Paso 1 — Verificar el entorno:**
+**Paso 0.5 — Mapa del proyecto (Bajo Demanda de Código):**
+*   Si existe `graphify-out/` y necesitas orientarte en el código:
+    *   Para navegación rápida → `graphify-out/GRAPH_REPORT_MIN.md` (resumen ultra-ligero).
+    *   Para listado completo → `graphify-out/GRAPH_REPORT.md` (bajo demanda).
+    *   Para preguntas directas → `graphify query "<pregunta>"` (más barato en tokens).
+
+**Paso 1 — Verificar el entorno (Solo si vas a desarrollar o modificar código):**
+> ℹ️ **Si la sesión es de solo-lectura, Q&A, consultas conceptuales o gestión del backlog (STATE.md), SALTA este paso.**
 ```bash
 node init.js
 ```
-- Si termina con `[HARNESS OK]` → continuar
-- Si termina con `[HARNESS FAIL]` → **STOP. Resolver los errores antes de continuar**
+- Si vas a modificar código y termina con `[HARNESS FAIL]` → **STOP. Resolver los errores antes de continuar**
 
 **Paso 2 — Leer el estado del proyecto:**
 1. `.harness/STATE.md` — backlog de tareas, decisiones tomadas y bloqueos activos
@@ -52,160 +60,68 @@ node init.js
 
 ---
 
-## 2. Mapa del repositorio
+## 2. Mapa del repositorio (Resumen)
 
 | Archivo / Carpeta | Propósito | Quién lo actualiza |
 |-------------------|-----------|-------------------|
-| `AGENTS.md` | Este archivo — protocolo universal | Orquestador (si cambia la estructura) |
-| `init.js` | Verificación del entorno — debe terminar con `[HARNESS OK]` | Orquestador al configurar el stack |
-| `.harness/STATE.md` | Fuente de verdad — backlog, decisiones y bloqueos | Orquestador al cerrar cada sesión |
-| `.harness/context/index.md` | Mapa de la memoria: qué fichero leer y cuándo | Orquestador |
-| `.harness/context/activeContext.md` | Snapshot de sesión activa (volátil) | `harness-start/finish.js` automáticamente |
-| `.harness/context/progress.md` | Estado por módulos con semáforos (volátil) | `harness-finish.js` + Orquestador |
-| `.harness/context/plans-index.md` | Índice de planes activos/completados (volátil) | Orquestador |
-| `.harness/context/projectbrief.md` | Visión de producto y objetivos core (estable) | Solo Orquestador |
-| `.harness/context/productContext.md` | Por qué existe el proyecto (estable) | Solo Orquestador |
-| `.harness/context/systemPatterns.md` | Decisiones arquitectónicas y patrones (estable) | Solo Orquestador |
-| `.harness/context/techContext.md` | Stack, comandos y restricciones técnicas (estable) | Orquestador al cambiar deps |
-| `.harness/skills/load-memory.md` | Skill AI-agnóstico: cargar contexto al inicio | Kit (no modificar) |
-| `.harness/skills/update-memory.md` | Skill AI-agnóstico: actualizar contexto al cierre | Kit (no modificar) |
+| `AGENTS.md` | Este archivo — protocolo universal e híbrido | Orquestador |
+| `docs/AGENTS_REFERENCE.md` | Protocolo extendido e informativo bajo demanda | Orquestador |
+| `init.js` | Verificación de salud del entorno | Orquestador |
+| `.harness/STATE.md` | Fuente de verdad — backlog, decisiones y bloqueos | Orquestador al cerrar tareas |
+| `.harness/context/` | Memoria del proyecto: activeContext, progress, briefs | `harness-finish.js` / Orquestador |
+| `.harness/skills/` | Habilidades disponibles (load-memory, update-memory) | Kit (no modificar) |
 | `.harness/rules/` | Reglas y contexto por área/agente | Orquestador al inicializar |
-| `.harness/workspaces/{tarea}/` | Oficina temporal de una tarea activa | Creada con `harness-start.js`, eliminada con `harness-finish.js` |
-| `.harness/workspaces/{tarea}/orden.md` | Briefing para el sub-agente: objetivo + criterios de aceptación | Solo Orquestador |
-| `.harness/workspaces/{tarea}/session.md` | Diario de trabajo del especialista | Solo el Agente Especialista |
-| `.harness/logs/` | Histórico de sesiones archivadas (append-only) | `harness-finish.js` automáticamente |
-| `.harness/logs/SUMMARY.md` | Resumen cronológico inverso de todas las tareas | `harness-finish.js` automáticamente |
+| `.harness/workspaces/` | Oficina temporal de tareas activas (orden.md, session.md) | `harness-start.js` / Especialistas |
+| `.harness/logs/` | Histórico de tareas completadas y SUMMARY.md | `harness-finish.js` automáticamente |
 
 ---
 
-## 3. Roles y responsabilidades
+## 3. Roles y reglas universales (no negociables)
 
-| Rol | Función | NUNCA hace | Herramientas |
-|-----|---------|-----------|--------------|
-| **Leader / Orquestador** | Lee STATE.md, crea workspaces, lanza sub-agentes, coordina decisiones | Escribir código de producción | Read, Glob, Grep, Bash, Agent |
-| **Implementer / Especialista** | Lee orden.md, ejecuta UNA tarea: código + tests + documenta en session.md | Cerrar su propia tarea sin avisar al orquestador | Read, Write, Edit, Glob, Grep, Bash |
-| **Reviewer** | Audita el trabajo del especialista contra los criterios de orden.md, emite APPROVED o CHANGES_REQUESTED | Editar el código que revisa | Read, Glob, Grep, Bash |
-
----
-
-## 4. Escala de esfuerzo
-
-> El Leader decide cuántos sub-agentes lanzar según la complejidad de la tarea.
-
-| Complejidad | Señales | Sub-agentes a lanzar |
-|-------------|---------|----------------------|
-| **Simple** | 1 archivo, lógica conocida, < 2h estimadas | 1 Implementer |
-| **Media** | 2-4 archivos, alguna decisión de diseño | 1 Implementer + 1 Reviewer |
-| **Compleja** | Múltiples áreas, decisiones arquitectónicas, > 1 día | 1-3 Explorer + 1 Implementer + 1 Reviewer |
-| **Investigación** | Desconocido, spike técnico, evaluar opciones | 2-4 Explorer en paralelo → síntesis |
+*   **Leader / Orquestador**: Lee STATE.md, gestiona workspaces, coordina. NUNCA escribe código.
+*   **Especialista**: Resuelve una única tarea en su workspace (`orden.md`/`session.md`). Escribe código + tests.
+*   **`node init.js` primero (para desarrollo)**: Si falla y vas a desarrollar o modificar código, se detiene el trabajo; no se programa en un entorno roto.
+*   **Una tarea por workspace**: No abrir nuevos workspaces sin cerrar el anterior.
+*   **Escribir en disco, no en chat**: Decisiones, reportes y hallazgos van en `session.md` de la tarea.
+*   **Verificación real obligatoria**: Ejecutar tests y comandos reales, no asumir que funciona.
+*   **Commits antes de cerrar**: Toda sesión termina con commit semántico y `node init.js` en verde.
 
 ---
 
-## 5. Reglas universales (no negociables)
-
-1. **`node init.js` primero** — si falla, el agente para; no continúa en un entorno roto
-2. **Una tarea por workspace** — no abrir un nuevo workspace hasta cerrar el anterior con `harness-finish.js`
-3. **Escribir en disco, no en chat** — toda decisión, resultado y hallazgo va en `session.md`
-4. **Verificación real obligatoria** — ejecutar el comando, no afirmar que funciona
-5. **No declarar DONE sin criterios cumplidos** — cada criterio de `orden.md` debe estar marcado `[x]`
-6. **Leader decide en ambigüedades** — si hay duda arquitectónica, el orquestador resuelve antes de implementar
-7. **Commits antes de cerrar** — ninguna sesión termina sin commit descriptivo y `node init.js` en verde
-
----
-
-## 6. Flujo de trabajo por tarea (Workspace Protocol)
+## 4. Flujo de trabajo por tarea (Workspace Protocol)
 
 ### Paso A — El Orquestador crea el workspace
 ```bash
 node scripts/harness-start.js --task nombre_tarea
 ```
-Esto crea automáticamente:
-```
-.harness/workspaces/nombre_tarea/
-├── orden.md    ← el orquestador rellena el objetivo y criterios
-└── session.md  ← el especialista documenta su trabajo aquí
-```
+Crea automáticamente `.harness/workspaces/nombre_tarea/` con `orden.md` (objetivos del orquestador) y `session.md` (diario del especialista).
 
-### Paso B — El Orquestador rellena orden.md
-Antes de lanzar el sub-agente, escribe en `orden.md`:
-- Objetivo concreto de la tarea
-- Criterios de aceptación verificables (`- [ ] criterio`)
-- Contexto relevante: decisiones tomadas, restricciones, ficheros clave
+### Paso B — El Orquestador escribe los objetivos
+Antes de lanzar al especialista, escribe en `orden.md` el objetivo concreto, los criterios de aceptación verificables (`- [ ]`) y archivos clave.
 
-### Paso C — El Especialista recibe su briefing
-El director abre una nueva sesión de IA con:
-> *"Lee `.harness/rules/{area}.md` y ejecuta la tarea en `.harness/workspaces/nombre_tarea/orden.md`"*
+### Paso C — El Especialista ejecuta la tarea
+El especialista lee `orden.md`, programa la lógica, añade pruebas, documenta cada paso en `session.md` y al terminar completa la sección "Reporte Final" de `session.md`.
 
-El especialista:
-1. Ejecuta `node init.js`
-2. Lee `orden.md` — entiende exactamente qué debe lograr y con qué criterios
-3. Trabaja: código + tests
-4. Documenta cada paso relevante en `session.md`
-5. Al terminar: completa la sección "Reporte Final" de `session.md` y avisa al orquestador
-
-### Paso D — El Orquestador cierra el workspace
+### Paso D — El Orquestador cierra la tarea
 ```bash
 node scripts/harness-finish.js --task nombre_tarea
 ```
-Esto automáticamente:
-- Archiva `session.md` en `.harness/logs/FECHA_nombre_tarea.md`
-- Añade entrada al principio de `.harness/logs/SUMMARY.md` (más reciente primero)
-- Marca la tarea como `[x]` en `.harness/STATE.md`
-- Elimina la carpeta temporal del workspace
+Archiva la sesión en `.harness/logs/`, actualiza el histórico `SUMMARY.md`, marca la tarea como resuelta en `STATE.md` y limpia la carpeta temporal.
 
 ---
 
-## 7. Cierre de sesión (Hand-off)
+## 5. Cierre de sesión (Hand-off)
 
-> Ejecutar esta secuencia ANTES de terminar cualquier sesión.
-
-**Especialista:**
-1. Completar sección "Reporte Final" de `session.md` (status, commit, impactos cruzados)
-2. Ejecutar `node init.js` — debe terminar con `[HARNESS OK]`
-3. Hacer commit: `"tipo(área): descripción breve"`
-4. Notificar al orquestador: `"done → tarea {nombre} lista para cierre"`
-
-**Orquestador:**
-1. Ejecutar `node scripts/harness-finish.js --task {nombre}` para archivar y limpiar
-2. Actualizar `.harness/STATE.md` si hay decisiones o bloqueos nuevos
-3. Ejecutar `node init.js` — debe terminar con `[HARNESS OK]`
-4. Hacer commit descriptivo si hay cambios pendientes
+Antes de terminar cualquier sesión de trabajo:
+1.  **Especialista**: Rellenar el "Reporte Final" de `session.md`, verificar salud con `node init.js`, realizar commit semántico y notificar al orquestador.
+2.  **Orquestador**: Archivar la tarea con `harness-finish.js`, actualizar decisiones pendientes en `STATE.md`, verificar salud y hacer commit descriptivo.
 
 ---
 
-## 8. Skills disponibles
+## 📖 Más información detallada (Bajo Demanda)
 
-Los skills son instrucciones autocontenidas que cualquier IA puede leer y ejecutar. Viven en `.harness/skills/`.
-
-| Skill | Fichero | Propósito |
-|-------|---------|-----------|
-| `load-memory` | `.harness/skills/load-memory.md` | Cargar contexto del proyecto (FAST LOAD o FULL LOAD) |
-| `update-memory` | `.harness/skills/update-memory.md` | Actualizar contexto al cerrar sesión o tras cambio significativo |
-
-> Cada IA invoca el skill según su mecanismo nativo. El contenido es el mismo para todas.
-
-### Regla de uso proactivo — el agente no espera que el usuario lo pida
-
-**Invocar `load-memory` antes de responder si:**
-- El usuario pregunta por el estado del proyecto, módulos, avances o próximos pasos
-- Vas a proponer o ejecutar una tarea y no tienes contexto de la sesión activa
-- Han pasado varios turnos de conversación sin haber cargado contexto del proyecto
-- El usuario pregunta "¿en qué estábamos?", "¿qué falta?", "¿cómo vamos?" o similar
-
-**Invocar `update-memory` al finalizar si:**
-- Se completó o bloqueó una tarea significativa y no se ejecutó `harness-finish.js`
-- Se tomó una decisión de arquitectura durante la sesión
-- El usuario dice "guardemos el estado", "cerramos por hoy" o termina la sesión
-
-No esperes a que el usuario pida cargar o guardar contexto — si lo necesitas, cárgalo.
-
----
-
-## 9. Escalado de decisiones bloqueantes
-
-> Si una decisión bloquea el avance y el director no está disponible:
-
-1. Documentar el bloqueo en `session.md` → sección "Reporte Final" con status `BLOQUEADO`
-2. Anotar la decisión pendiente en `.harness/STATE.md` → sección "Decisiones y Bloqueos Activos"
-3. **Parar** — no improvisar decisiones arquitectónicas sin consenso
-4. Ver `prompts/05_decision_resolver.md` para el protocolo de resolución
+Para los siguientes temas puramente informativos o de referencia, **abre y lee `docs/AGENTS_REFERENCE.md`**:
+1. **Detalles extendidos de Roles, Herramientas y Excepciones**
+2. **Escala de esfuerzo y decisión de sub-agentes**
+3. **Detalle completo de proactividad de los Skills**
+4. **Protocolo para Escalado de decisiones bloqueantes**

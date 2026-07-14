@@ -1,37 +1,60 @@
 # .graphifyignore — Exclusiones para graphify
-# Igual que .gitignore: define qué archivos/carpetas NO se escanean al construir el grafo.
-# Útil para ignorar dependencias, builds generados, logs, etc.
+# Igual que .gitignore: define qué archivos/carpetas NO se escanan al construir el grafo.
+# Útil para ignorar dependencias, builds generados, logs, bases de datos, etc.
 
-# Dependencias
+# Dependencias (Cubre todos los gestores de paquetes habituales)
 node_modules/
 vendor/
 .venv/
 venv/
 env/
+packages/
 
-# Builds generados
+# Builds generados y assets estáticos pesados
 dist/
 build/
 out/
 .next/
 .nuxt/
 .output/
+.svelte-kit/
+target/
+bin/
+obj/
+public/assets/
 
-# Herramientas y configuración
-.git/
+# Herramientas de IA y configuración de harness-kit
+# Excluimos dot-dirs y dot-files para no indexar caches, configuración ni volcados temporales
+.*
 .harness/
+.claude/
+.gemini/
+.agent/
 graphify-out/
 .cache/
 coverage/
 .nyc_output/
 
-# Logs
+# Bases de datos, backups y migraciones
+migrations/
+backups/
+*.db
+*.sqlite
+*.sqlite3
+*.sql
+*.tar
+*.gz
+*.zip
+*.7z
+
+# Logs y trazas de depuración
 *.log
 npm-debug.log*
 yarn-debug.log*
 pnpm-debug.log*
+*.tlog
 
-# Archivos temporales
+# Archivos temporales y de sistema
 *.tmp
 *.swp
 *.swo
@@ -39,12 +62,15 @@ pnpm-debug.log*
 .DS_Store
 Thumbs.db
 
-# Documentación generada (si aplica)
-docs/generated/
-api-docs/
-
-# Archivos sensibles (no incluir en el grafo)
-*.pem
-*.key
-.env
-.env.*
+# Configuración del proyecto y lockfiles (no son código fuente, evitan inflar el grafo)
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+pnpm-workspace.yaml
+jsconfig.json
+tsconfig.json
+Gemfile.lock
+Cargo.lock
+poetry.lock
+pipfile
+composer.lock

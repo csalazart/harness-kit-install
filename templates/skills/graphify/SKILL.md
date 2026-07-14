@@ -450,7 +450,19 @@ if not wrote:
     print('If this shrink is intentional (you deleted files), re-run a full build with --force.')
     raise SystemExit(1)
 report = generate(G, communities, cohesion, labels, gods, surprises, detection, tokens, 'INPUT_PATH', suggested_questions=questions)
-Path('graphify-out/GRAPH_REPORT.md').write_text(report, encoding=\"utf-8\")
+Path('graphify-out/GRAPH_REPORT.md').write_text(report, encoding="utf-8")
+
+# Generate GRAPH_REPORT_MIN.md (context-optimized version)
+min_report = []
+sections_to_keep = ["# ", "## God Nodes", "## Surprising Connections", "## Suggested Questions", "## Community Hubs"]
+current_keep = True
+for line in report.splitlines():
+    if line.startswith("## "):
+        current_keep = any(line.startswith(sec) for sec in sections_to_keep)
+    if current_keep:
+        min_report.append(line)
+Path('graphify-out/GRAPH_REPORT_MIN.md').write_text("\n".join(min_report), encoding="utf-8")
+
 analysis = {
     'communities': {str(k): v for k, v in communities.items()},
     'cohesion': {str(k): v for k, v in cohesion.items()},
@@ -526,6 +538,18 @@ questions = suggest_questions(G, communities, labels)
 
 report = generate(G, communities, cohesion, labels, analysis['gods'], analysis['surprises'], detection, tokens, 'INPUT_PATH', suggested_questions=questions)
 Path('graphify-out/GRAPH_REPORT.md').write_text(report, encoding=\"utf-8\")
+
+# Generate GRAPH_REPORT_MIN.md (context-optimized version)
+min_report = []
+sections_to_keep = ["# ", "## God Nodes", "## Surprising Connections", "## Suggested Questions", "## Community Hubs"]
+current_keep = True
+for line in report.splitlines():
+    if line.startswith("## "):
+        current_keep = any(line.startswith(sec) for sec in sections_to_keep)
+    if current_keep:
+        min_report.append(line)
+Path('graphify-out/GRAPH_REPORT_MIN.md').write_text("\n".join(min_report), encoding="utf-8")
+
 Path('graphify-out/.graphify_labels.json').write_text(json.dumps({str(k): v for k, v in labels.items()}, ensure_ascii=False), encoding=\"utf-8\")
 print('Report updated with community labels')
 "
