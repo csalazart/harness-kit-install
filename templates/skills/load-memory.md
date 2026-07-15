@@ -27,10 +27,8 @@ Contexto cargado: [proyecto] | Rama: [rama] | Próximo: [próximo paso] | Bloque
 
 ## NIVEL 1.5 — MAPA DEL PROYECTO (Bajo Demanda)
 
-Si necesitas orientarte sobre la organización de los ficheros y dependencias del código:
-- **Navegación ultra-ligera (Recomendado):** Lee `graphify-out/GRAPH_REPORT_MIN.md` para entender de un vistazo los módulos principales (*Community Hubs*) y ficheros críticos (*God Nodes*).
-- **Listado completo:** Lee `graphify-out/GRAPH_REPORT.md` solo si necesitas una vista detallada de todo el grafo.
-- **Búsqueda quirúrgica:** Ejecuta `graphify query "<pregunta>"` en lugar de escanear directorios enteros.
+Si necesitas orientarte sobre la organización de los ficheros, dependencias, o buscar clases/funciones dentro del código:
+- **Búsqueda Quirúrgica y Precisa:** Ejecuta directamente el comando CLI `graphify query "<pregunta>"` para consultar el grafo de conocimiento de forma enfocada y bajo demanda. Evita escanear directorios o leer archivos de reporte intermedios.
 
 ---
 

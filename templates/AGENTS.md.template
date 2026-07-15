@@ -31,11 +31,9 @@ Mostrar resumen compacto tras leerlos:
 Contexto cargado: [proyecto] | Rama: [rama] | Próximo: [próximo paso] | Bloqueantes: [ninguno/lista]
 ```
 
-**Paso 0.5 — Mapa del proyecto (Bajo Demanda de Código):**
-*   Si existe `graphify-out/` y necesitas orientarte en el código:
-    *   Para navegación rápida → `graphify-out/GRAPH_REPORT_MIN.md` (resumen ultra-ligero).
-    *   Para listado completo → `graphify-out/GRAPH_REPORT.md` (bajo demanda).
-    *   Para preguntas directas → `graphify query "<pregunta>"` (más barato en tokens).
+**Paso 0.5 — Consultas al Grafo (Bajo Demanda):**
+*   Si el proyecto tiene un grafo integrado en `graphify-out/` y necesitas entender la estructura del código, relaciones o buscar funciones/clases, ejecuta directamente:
+    `graphify query "<pregunta>"`
 
 **Paso 1 — Verificar el entorno (Solo si vas a desarrollar o modificar código):**
 > ℹ️ **Si la sesión es de solo-lectura, Q&A, consultas conceptuales o gestión del backlog (STATE.md), SALTA este paso.**
