@@ -1,0 +1,96 @@
+# Guía de Instalación y Uso de Graphify
+> **Última actualización:** {{DATE}}
+> 
+> 🧠 **Graphify** convierte tu código fuente en un grafo de conocimiento navegable de forma semántica.
+> Permite a las IAs realizar consultas precisas con cero tokens de reportes estáticos redundantes.
+
+---
+
+## 📋 Requisitos Previos: Instalación de Python
+
+Graphify es una librería nativa de Python. Necesitas tener **Python 3.10 o superior** instalado en tu máquina local.
+
+### 💻 1. Instalación en Windows
+1. Abre PowerShell y verifica si ya lo tienes instalado:
+   ```powershell
+   python --version
+   ```
+2. Si no lo tienes, la forma más rápida y segura es mediante **winget**:
+   ```powershell
+   winget install Python.Python.3.12
+   ```
+3. *Alternativa:* Descárgalo desde [python.org](https://www.python.org/downloads/) asegurándote de marcar la casilla **"Add python.exe to PATH"** durante el asistente.
+
+### 🍎 2. Instalación en macOS
+1. Abre la terminal y verifica:
+   ```bash
+   python3 --version
+   ```
+2. Si no está instalado, usa **Homebrew**:
+   ```bash
+   brew install python
+   ```
+
+### 🐧 3. Instalación en Linux (Ubuntu/Debian)
+1. Abre tu terminal de bash y ejecuta:
+   ```bash
+   python3 --version
+   ```
+2. Si falta, instálalo junto con las dependencias de empaquetado:
+   ```bash
+   sudo apt update
+   sudo apt install python3 python3-pip python3-venv -y
+   ```
+
+---
+
+## ⚡ INSTALACIÓN DE GRAPHIFY: Paso a Paso
+
+> ⚠️ **REGLA DE ORO:** La primera ejecución de Graphify se debe realizar **siempre desde el Agente de IA activo** (Claude Code, Gemini, Cursor) en el chat del proyecto.
+> 
+> **¿Por qué?** Porque el agente ejecutará el script inteligente que instalará de forma silenciosa e independiente el paquete `graphifyy`, construirá el grafo inicial `graph.json` y creará la caché del intérprete (`graphify-out/.graphify_python`) necesaria para que los scripts de automatización funcionen.
+
+### Paso 1: Activar el comando en el chat
+Abre tu agente en la raíz del proyecto y escribe el comando:
+```
+/graphify
+```
+*El agente detectará los archivos, instalará `graphifyy` mediante el intérprete local y compilará la base de datos semántica.*
+
+---
+
+## 🤖 Uso de los Scripts Locales de Automatización (Post-Instalación)
+
+Una vez que la IA ha completado esa primera ejecución y configurado el entorno, puedes usar los scripts incluidos en `scripts/` desde tu terminal física, ahorrando tokens y tiempo:
+
+### 1. Actualizar el Grafo con cambios locales (Incremental)
+Úsalo después de modificar código para sincronizar los cambios sin reconstruir todo desde cero.
+*   **En Windows (PowerShell):**
+    ```powershell
+    .\scripts\update-graph.ps1
+    ```
+*   **En Mac / Linux (Terminal):**
+    ```bash
+    ./scripts/update-graph.sh
+    ```
+
+### 2. Consultar el Grafo (Query)
+Permite hacer preguntas inferidas sobre las relaciones o arquitectura del código directamente en consola.
+*   **En Windows (PowerShell):**
+    ```powershell
+    .\scripts\query-graph.ps1 "¿Cómo se comunica el módulo de base de datos con el servicio de autenticación?"
+    ```
+*   **En Mac / Linux (Terminal):**
+    ```bash
+    ./scripts/query-graph.sh "Trace the execution flow of the smart contract mint function."
+    ```
+
+---
+
+## 🛠️ Resolución de Problemas (Troubleshooting)
+
+*   **Error: "No se encontró la configuración de Graphify en 'graphify-out/'"**
+    *   *Solución:* Esto ocurre si borraste la carpeta de salida o no has corrido la primera ejecución desde el Agente de IA. Abre tu agente de IA y escribe `/graphify` para reconstruir la caché.
+*   **¿Cómo forzar una reconstrucción limpia?**
+    *   Si los archivos de código cambiaron drásticamente y quieres un grafo 100% fresco, puedes pedirle a la IA:
+        `/graphify . --force`

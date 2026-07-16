@@ -86,10 +86,12 @@ Crea las siguientes carpetas para la arquitectura Task-Driven:
 
 ### 5. Documentación y Reglas Técnicas
 Copia el fichero maestro universal `harness-kit-install/templates/AGENTS.md.template` a `AGENTS.md`.
-Crea la carpeta `docs/` en la raíz (si no existe) y copia `harness-kit-install/templates/docs/AGENTS_REFERENCE.md.template` a `docs/AGENTS_REFERENCE.md`.
+Crea la carpeta `docs/` en la raíz (si no existe) y copia:
+- `harness-kit-install/templates/docs/AGENTS_REFERENCE.md.template` a `docs/AGENTS_REFERENCE.md`
+- `harness-kit-install/templates/docs/GRAPHIFY_GUIDE.md.template` a `docs/GRAPHIFY_GUIDE.md`
 
-> ⚠️ **Si ya existe un AGENTS.md o un docs/AGENTS_REFERENCE.md en el proyecto: FUSIONA, nunca sobrescribas.**
-> Conserva al final del AGENTS.md/docs/AGENTS_REFERENCE.md generado cualquier sección ajena al harness-kit-install
+> ⚠️ **Si ya existe un AGENTS.md, docs/AGENTS_REFERENCE.md o docs/GRAPHIFY_GUIDE.md en el proyecto: FUSIONA, nunca sobrescribas.**
+> Conserva al final del AGENTS.md/docs/AGENTS_REFERENCE.md generado cualquier sección ajena al harness-kit
 > (por ejemplo "## Cerebro OKF" de harness-okf, u otras de terceros). Mismo criterio
 > con CLAUDE.md: conserva el import `@AGENTS.md` y las secciones ajenas existentes.
 
@@ -216,19 +218,20 @@ Crea `.harness/context/index.md` desde
 2. Muéstrame el árbol de ficheros generado (incluyendo `.harness/context/` y `.harness/skills/`)
 3. Dime cuál es el primer agente que debo abrir y por qué
 
-4. **(Opcional) Instala graphify para graficar tu código**
+4. **(Opcional - RECOMENDADO) Instala graphify para graficar tu código**
 
    Antes de terminar, ¿quieres que instale **graphify**? Es una herramienta que
-   convierte tu código en un grafo de conocimiento navegable con:
-   - Detección automática de comunidades
-   - Nodos "god" (los archivos más conectados)
-   - Conexiones sorprendentes entre módulos
-   - Reporte de auditoría en `graphify-out/GRAPH_REPORT.md`
-   - Visualización HTML interactiva
+   convierte tu código en un grafo de conocimiento navegable de forma semántica.
+   Se recomienda fuertemente su instalación para proyectos complejos ya que 
+   permite a los agentes orientarse de forma automática y precisa.
 
    **Si deseas instalarlo:**
 
    **Requisito previo: Python** — graphify es una librería Python (`graphifyy`).
+   Para ver las instrucciones paso a paso detalladas por sistema operativo (Windows, macOS, Linux)
+   sobre cómo configurar Python y utilizar los scripts utilitarios integrados, 
+   **consulta la guía local en: `docs/GRAPHIFY_GUIDE.md`**.
+
    Antes de continuar, verifica que tienes Python instalado:
 
    ```bash
