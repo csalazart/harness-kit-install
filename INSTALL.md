@@ -8,7 +8,7 @@
 
 - [ ] **Node.js** instalado en tu máquina → [nodejs.org](https://nodejs.org) (descarga la versión LTS)
 - [ ] **Claude Code** (u otro agente IA) abierto en tu proyecto
-- [ ] La carpeta `harness-kit/` (esta misma carpeta que estás leyendo)
+- [ ] La carpeta `harness-kit-install/` (esta misma carpeta que estás leyendo)
 
 Verifica Node.js abriendo una terminal y ejecutando:
 ```
@@ -20,12 +20,12 @@ Debe mostrar algo como `v20.x.x`. Si da error, instala Node.js primero.
 
 ## PASO 1 — Copia esta carpeta dentro de tu proyecto
 
-Copia la carpeta `harness-kit/` completa a la raíz de tu proyecto.
+Copia la carpeta `harness-kit-install/` completa a la raíz de tu proyecto.
 
 **Tu proyecto debe quedar así:**
 ```
 mi-proyecto/
-├── harness-kit/      ← esta carpeta aquí
+├── harness-kit-install/      ← esta carpeta aquí
 ├── src/              ← tu código (si ya existe)
 ├── package.json      ← tus archivos (si ya existen)
 └── ...
@@ -49,7 +49,7 @@ Abre el chat de tu agente IA (Claude Code, Gemini, etc.) apuntando a la raíz de
 Copia y pega **exactamente** este mensaje en el chat:
 
 ```
-Lee el fichero harness-kit/prompts/01_init.md y sigue todas las instrucciones que contiene.
+Lee el fichero harness-kit-install/prompts/01_init.md y sigue todas las instrucciones que contiene.
 Empieza por la Fase A (descubrimiento) antes de hacer nada más.
 ```
 
@@ -104,7 +104,7 @@ mi-proyecto/
 ├── .agents/skills/        ← skills accesibles para cualquier agente IA
 ├── .claude/skills/        ← skills accesibles para Claude Code (si lo usas)
 │
-└── harness-kit/           ← el kit original (no borrar)
+└── harness-kit-install/           ← el kit original (no borrar)
 ```
 
 ---
@@ -153,7 +153,7 @@ de cada agente durante la instalación.
 
 **¿Puedo reinstalar si algo salió mal?**
 Sí. Vuelve al Paso 3 y dile al agente:
-`"El harness no quedó bien instalado, por favor revisa y completa la instalación leyendo harness-kit/prompts/01_init.md"`
+`"El harness no quedó bien instalado, por favor revisa y completa la instalación leyendo harness-kit-install/prompts/01_init.md"`
 
 **¿Puedo agregar graphify después de la instalación?**
 Sí. En cualquier momento dile al agente: `/graphify` y configurará todo.

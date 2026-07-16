@@ -51,16 +51,16 @@ Antes de tocar nada, interioriza este mapa. Define exactamente qué leer y dónd
 |-------------------------------------|----------------------------------------|-----------------------------------------------------------------------------|
 | `.harness/rules/leader.md`          | `.harness/rules/orchestrator.md`       | Renombrar; adaptar secciones al template `AGENT_00_ORCHESTRATOR.template.md`; añadir sección "Cómo lanzar un sub-agente" con harness-start.js |
 | `.harness/rules/implementer.md`     | `.harness/rules/{modulo}.md`           | Si hay reglas genéricas → crear un `specialist.md`; si hay reglas por área → dividir en un fichero por área |
-| `.harness/rules/reviewer.md`        | `.harness/rules/git-reviewer.md`       | Renombrar; si el contenido es pobre, reemplazar por `harness-kit/rules-library/agent-git-reviewer.md` |
-| Reglas técnicas de stack (si existen)| `.harness/rules/{stack}.md`           | Mantener; si no existen, copiar las relevantes de `harness-kit/rules-library/` |
+| `.harness/rules/reviewer.md`        | `.harness/rules/git-reviewer.md`       | Renombrar; si el contenido es pobre, reemplazar por `harness-kit-install/rules-library/agent-git-reviewer.md` |
+| Reglas técnicas de stack (si existen)| `.harness/rules/{stack}.md`           | Mantener; si no existen, copiar las relevantes de `harness-kit-install/rules-library/` |
 
 ### GRUPO 5 — Infraestructura y documentación
 
 | Fichero origen (viejo)              | Destino (nuevo)                        | Transformación                                                              |
 |-------------------------------------|----------------------------------------|-----------------------------------------------------------------------------|
-| `init.sh`                           | `init.js`                              | Reemplazar con `harness-kit/templates/init.js.template` adaptado al stack detectado |
-| `CLAUDE.md` (incompleto/antiguo)    | `CLAUDE.md`                            | Actualizar con `harness-kit/templates/CLAUDE.md.template`; preservar Descripción, Stack y Notas del dominio existentes |
-| `AGENTS.md` (antiguo)               | `AGENTS.md`                            | Reemplazar con `harness-kit/templates/AGENTS.md.template` adaptado; el contenido relevante ya habrá migrado a las rules/ |
+| `init.sh`                           | `init.js`                              | Reemplazar con `harness-kit-install/templates/init.js.template` adaptado al stack detectado |
+| `CLAUDE.md` (incompleto/antiguo)    | `CLAUDE.md`                            | Actualizar con `harness-kit-install/templates/CLAUDE.md.template`; preservar Descripción, Stack y Notas del dominio existentes |
+| `AGENTS.md` (antiguo)               | `AGENTS.md`                            | Reemplazar con `harness-kit-install/templates/AGENTS.md.template` adaptado; el contenido relevante ya habrá migrado a las rules/ |
 | `README.md` / `docs/`              | `CLAUDE.md` → sección Notas del dominio | Extraer: decisiones de arquitectura vigentes, convenciones del equipo, restricciones de negocio |
 
 ---
@@ -131,7 +131,7 @@ Reglas durante la ejecución:
 - **Nunca descartar** sin confirmar primero con el usuario si hay duda
 - **STATE.md**: primero escribe las tareas completadas al final con `[x]`, luego las pendientes con `[ ]`
 - **SUMMARY.md**: entradas más recientes primero; si no hay fecha exacta, usa "YYYY-MM (aprox)"
-- **orchestrator.md**: usar `harness-kit/templates/agents/AGENT_00_ORCHESTRATOR.template.md` como base; no perder reglas específicas del proyecto del leader.md viejo
+- **orchestrator.md**: usar `harness-kit-install/templates/agents/AGENT_00_ORCHESTRATOR.template.md` como base; no perder reglas específicas del proyecto del leader.md viejo
 - **Al crear workspaces**: ejecutar `node scripts/harness-start.js --task {nombre}` en vez de crear carpetas a mano
 
 Tras cada fichero creado, confirma en el chat: `✅ {fichero} — {1 línea de qué contiene}`

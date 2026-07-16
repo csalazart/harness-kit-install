@@ -6,7 +6,7 @@
 Asegúrate de tener **Node.js** instalado (`node -v` para verificar).
 
 ```bash
-cp -r harness-kit/ /tu/nuevo/proyecto/harness-kit
+cp -r harness-kit-install/ /tu/nuevo/proyecto/harness-kit
 ```
 
 ### Paso 2 — Abre Claude Code en tu proyecto
@@ -16,11 +16,11 @@ claude
 ```
 
 ### Paso 3 — Pega el prompt de inicialización
-Copia el contenido de `harness-kit/prompts/01_init.md` y envíalo al chat.
+Copia el contenido de `harness-kit-install/prompts/01_init.md` y envíalo al chat.
 
 ### Paso 4 — Responde las preguntas
 La IA te preguntará sobre tu proyecto (nombre, tipo, stack, módulos, estado).
-Las preguntas están documentadas en `harness-kit/questionnaire/project_discovery.md` como referencia.
+Las preguntas están documentadas en `harness-kit-install/questionnaire/project_discovery.md` como referencia.
 Si ya tienes documentación (`README.md`, `package.json`, etc.), díselo — la analizará directamente.
 
 ### Paso 5 — El harness queda listo
@@ -29,7 +29,7 @@ Al terminar tendrás en la raíz de tu proyecto:
 CLAUDE.md                          ← contexto para Claude Code
 AGENTS.md                          ← protocolo universal (todos los modelos)
 init.js                            ← verificación del entorno (node init.js)
-harness-kit/                       ← kit completo (no borrar, los prompts lo referencian)
+harness-kit-install/                       ← kit completo (no borrar, los prompts lo referencian)
 scripts/
 ├── harness-start.js               ← crea un workspace de tarea
 └── harness-finish.js              ← archiva y cierra un workspace

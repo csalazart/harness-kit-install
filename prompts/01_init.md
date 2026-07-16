@@ -60,17 +60,23 @@ Muéstrame este análisis y espera mi confirmación antes de continuar.
 Crea los siguientes ficheros de control adaptados a ESTE proyecto específico:
 
 ### 1. CLAUDE.md (si no existe o necesita actualización)
-Usa la plantilla de harness-kit/templates/CLAUDE.md.template.
+Usa la plantilla de harness-kit-install/templates/CLAUDE.md.template.
 Adapta cada sección al proyecto real.
 
 ### 2. .harness/STATE.md
-Inicia el `STATE.md` copiando la plantilla `harness-kit/templates/STATE.md.template`.
+Inicia el `STATE.md` copiando la plantilla `harness-kit-install/templates/STATE.md.template`.
 Rellena la sección "Backlog de Tareas" con las tareas identificadas en tu análisis de la Fase B.
 
-### 3. Scripts de Mantenimiento
+### 3. Scripts de Mantenimiento y Automatización
 Crea la carpeta `scripts/` en la raíz.
-Copia `harness-kit/templates/harness-start.js.template` a `scripts/harness-start.js`
-Copia `harness-kit/templates/harness-finish.js.template` a `scripts/harness-finish.js`
+Copia `harness-kit-install/templates/harness-start.js.template` a `scripts/harness-start.js`
+Copia `harness-kit-install/templates/harness-finish.js.template` a `scripts/harness-finish.js`
+
+*   **Scripts de Soporte de Graphify (Bajo Demanda):**
+    Copia `harness-kit-install/templates/update-graph.ps1.template` a `scripts/update-graph.ps1`
+    Copia `harness-kit-install/templates/update-graph.sh.template` a `scripts/update-graph.sh`
+    Copia `harness-kit-install/templates/query-graph.ps1.template` a `scripts/query-graph.ps1`
+    Copia `harness-kit-install/templates/query-graph.sh.template` a `scripts/query-graph.sh`
 
 ### 4. Entorno de Agentes (.harness/)
 Crea las siguientes carpetas para la arquitectura Task-Driven:
@@ -79,11 +85,11 @@ Crea las siguientes carpetas para la arquitectura Task-Driven:
 - `.harness/rules/` (Reglas por módulo del proyecto)
 
 ### 5. Documentación y Reglas Técnicas
-Copia el fichero maestro universal `harness-kit/templates/AGENTS.md.template` a `AGENTS.md`.
-Crea la carpeta `docs/` en la raíz (si no existe) y copia `harness-kit/templates/docs/AGENTS_REFERENCE.md.template` a `docs/AGENTS_REFERENCE.md`.
+Copia el fichero maestro universal `harness-kit-install/templates/AGENTS.md.template` a `AGENTS.md`.
+Crea la carpeta `docs/` en la raíz (si no existe) y copia `harness-kit-install/templates/docs/AGENTS_REFERENCE.md.template` a `docs/AGENTS_REFERENCE.md`.
 
 > ⚠️ **Si ya existe un AGENTS.md o un docs/AGENTS_REFERENCE.md en el proyecto: FUSIONA, nunca sobrescribas.**
-> Conserva al final del AGENTS.md/docs/AGENTS_REFERENCE.md generado cualquier sección ajena al harness-kit
+> Conserva al final del AGENTS.md/docs/AGENTS_REFERENCE.md generado cualquier sección ajena al harness-kit-install
 > (por ejemplo "## Cerebro OKF" de harness-okf, u otras de terceros). Mismo criterio
 > con CLAUDE.md: conserva el import `@AGENTS.md` y las secciones ajenas existentes.
 
@@ -95,11 +101,11 @@ Para cada área identificada, crea el fichero de reglas en `.harness/rules/`:
 Copia también las reglas técnicas relevantes del stack desde `rules-library/` a `.harness/rules/`.
 
 ### 7. init.js
-Adapta `harness-kit/templates/init.js.template` al stack detectado y crea `init.js` en la raíz.
+Adapta `harness-kit-install/templates/init.js.template` al stack detectado y crea `init.js` en la raíz.
 Verifica que al ejecutar `node init.js` termina con `[HARNESS OK]` antes de continuar.
 
 > **Nota sobre verificación del entorno:** Se recomienda `init.js` (Node.js, cross-platform).
-> Existe también `harness-kit/templates/init.sh.template` como alternativa para entornos
+> Existe también `harness-kit-install/templates/init.sh.template` como alternativa para entornos
 > Bash puros (Linux/Mac sin Node). Usa el que corresponda al entorno del proyecto.
 
 ### 8. Scaffold de carpetas
@@ -129,7 +135,7 @@ Carpetas a crear (las que no existan):
 
 **Paso 9.2 — Ejecutar el script de enlace**
 
-Copia `harness-kit/templates/harness-link-skills.js.template` a `scripts/harness-link-skills.js`
+Copia `harness-kit-install/templates/harness-link-skills.js.template` a `scripts/harness-link-skills.js`
 y ejecútalo:
 
 ```bash
@@ -151,12 +157,12 @@ El script detecta las carpetas creadas en el paso anterior y genera un symlink
 ### 10. Configuración de hooks e integración con IA (opcional pero recomendado)
 
 **Si el proyecto usa Claude Code:**
-- Copia `harness-kit/templates/.claude/settings.json.template` a `.claude/settings.json`
+- Copia `harness-kit-install/templates/.claude/settings.json.template` a `.claude/settings.json`
 - Este hook ejecuta `node init.js` automáticamente en cada edición y al cerrar sesión
 - Sin el hook, AGENTS.md ya instruye a la IA que ejecute `node init.js` al arrancar (Paso 1 del Handshake)
 
 **Si el proyecto usa Gemini como IA principal o secundaria:**
-- Copia `harness-kit/templates/GEMINI.md.template` a `GEMINI.md` en la raíz
+- Copia `harness-kit-install/templates/GEMINI.md.template` a `GEMINI.md` en la raíz
 - Adapta `{{PROJECT_NAME}}` y `{{DATE}}`
 - El protocolo universal sigue siendo `AGENTS.md` — `GEMINI.md` solo añade contexto Gemini-específico
 
@@ -182,8 +188,8 @@ Usando las respuestas de las preguntas 19-24 del cuestionario (o inferidas del a
 
 **Skills AI-agnósticos:**
 
-- `.harness/skills/load-memory.md` — copiar desde `harness-kit/templates/skills/load-memory.md`
-- `.harness/skills/update-memory.md` — copiar desde `harness-kit/templates/skills/update-memory.md`
+- `.harness/skills/load-memory.md` — copiar desde `harness-kit-install/templates/skills/load-memory.md`
+- `.harness/skills/update-memory.md` — copiar desde `harness-kit-install/templates/skills/update-memory.md`
 
 Si alguna pregunta (19-24) no fue respondida, usar el placeholder `[pendiente de definir]`.
 
@@ -197,7 +203,7 @@ Verificar que `node init.js` muestra:
 ### 11. Índice de la memoria (.harness/context/index.md)
 
 Crea `.harness/context/index.md` desde
-`harness-kit/templates/context/index.md.template`: es el **mapa de la memoria**
+`harness-kit-install/templates/context/index.md.template`: es el **mapa de la memoria**
 (qué fichero leer, cuándo — FAST vs FULL LOAD — y quién lo actualiza).
 
 > 💡 Si el usuario quiere además una **knowledge base de dominio** (conceptos,
@@ -239,11 +245,11 @@ Crea `.harness/context/index.md` desde
 
    a) Copia el skill:
       ```
-      harness-kit/templates/skills/graphify/ → .claude/skills/graphify/
-      harness-kit/templates/skills/graphify/ → .agents/skills/graphify/
+      harness-kit-install/templates/skills/graphify/ → .claude/skills/graphify/
+      harness-kit-install/templates/skills/graphify/ → .agents/skills/graphify/
       ```
 
-   b) Crea `.graphifyignore` en la raíz del proyecto (usa `harness-kit/templates/.graphifyignore.template` como base):
+   b) Crea `.graphifyignore` en la raíz del proyecto (usa `harness-kit-install/templates/.graphifyignore.template` como base):
       ```
       node_modules/
       dist/

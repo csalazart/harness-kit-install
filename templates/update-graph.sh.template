@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Actualiza el grafo de conocimiento de Graphify de forma incremental.
+
+set -e
+
+ROOT="$(pwd)"
+PYTHON_FILE="$ROOT/graphify-out/.graphify_python"
+
+if [ ! -f "$PYTHON_FILE" ]; then
+    echo -e "\e[33m⚠️ No se encontró la configuración de Graphify en 'graphify-out/'."
+    echo -e "Debes ejecutar Graphify por primera vez desde tu Agente de IA (Claude Code, Gemini, Cursor...)"
+    echo -e "para instalar dependencias, inicializar el grafo semántico y configurar el intérprete de Python de forma segura.\e[0m"
+    exit 1
+fi
+
+PYTHON_BIN=$(cat "$PYTHON_FILE" | tr -d '\r')
+echo -e "\e[36m🔄 Actualizando grafo de conocimiento con Graphify de forma incremental...\e[0m"
+"$PYTHON_BIN" -m graphify --update .
+
+echo -e "\e[32m✅ [GRAFO ACTUALIZADO] — Graphify sincronizó los cambios locales con éxito.\e[0m"

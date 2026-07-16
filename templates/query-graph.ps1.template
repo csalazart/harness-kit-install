@@ -1,0 +1,29 @@
+<#
+.SYNOPSIS
+  Realiza consultas semánticas al grafo de conocimiento de Graphify.
+.EXAMPLE
+  .\scripts\query-graph.ps1 "How does the authentication module work?"
+#>
+$ErrorActionPreference = "Stop"
+
+if ($args.Count -eq 0) {
+    Write-Host "⚠️ Debes proporcionar una pregunta o término de búsqueda entre comillas." -ForegroundColor Yellow
+    Write-Host "Uso: .\scripts\query-graph.ps1 ""¿Cómo funciona el módulo de autenticación?""" -ForegroundColor Cyan
+    Exit 1
+}
+
+$query = $args -join " "
+
+$root = (Get-Location).Path
+$python_file = Join-Path $root "graphify-out\.graphify_python"
+
+if (-not (Test-Path $python_file)) {
+    Write-Warning "⚠️ No se encontró la configuración de Graphify en 'graphify-out/'."
+    Write-Host "Debes ejecutar Graphify por primera vez desde tu Agente de IA (Claude Code, Gemini, Cursor...)" -ForegroundColor Yellow
+    Write-Host "para instalar dependencias, inicializar el grafo semántico y configurar el intérprete de Python de forma segura." -ForegroundColor Yellow
+    Exit 1
+}
+
+$python_bin = (Get-Content $python_file).Trim()
+Write-Host "🔍 Interrogando al grafo de conocimiento de forma semántica..." -ForegroundColor Cyan
+& $python_bin -m graphify query "$query"

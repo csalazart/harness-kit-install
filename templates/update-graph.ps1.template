@@ -1,0 +1,27 @@
+<#
+.SYNOPSIS
+  Actualiza el grafo de conocimiento de Graphify de forma incremental.
+.DESCRIPTION
+  Usa el intérprete de Python guardado por la IA en la primera ejecución.
+#>
+$ErrorActionPreference = "Stop"
+
+$root = (Get-Location).Path
+$python_file = Join-Path $root "graphify-out\.graphify_python"
+
+if (-not (Test-Path $python_file)) {
+    Write-Warning "⚠️ No se encontró la configuración de Graphify en 'graphify-out/'."
+    Write-Host "Debes ejecutar Graphify por primera vez desde tu Agente de IA (Claude Code, Gemini, Cursor...)" -ForegroundColor Yellow
+    Write-Host "para instalar dependencias, inicializar el grafo semántico y configurar el intérprete de Python de forma segura." -ForegroundColor Yellow
+    Exit 1
+}
+
+$python_bin = (Get-Content $python_file).Trim()
+Write-Host "🔄 Actualizando grafo de conocimiento con Graphify de forma incremental..." -ForegroundColor Cyan
+& $python_bin -m graphify --update .
+
+if ($LASTEXITCODE -eq 0) {
+    Write-Host "✅ [GRAFO ACTUALIZADO] — Graphify sincronizó los cambios locales con éxito." -ForegroundColor Green
+} else {
+    Write-Error "❌ Error al actualizar el grafo de conocimiento."
+}

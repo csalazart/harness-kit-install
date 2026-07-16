@@ -87,17 +87,17 @@ harness-kit-install/
 ### Opción C — Añadir un agente nuevo a un proyecto ya "harnessado"
 1. Usa `prompts/02_new_agent.md` con el contexto de tu proyecto
 
-### Opción D — Kit completo: harness-kit + harness-okf (recomendado)
+### Opción D — Kit completo: harness-kit-install + harness-okf (recomendado)
 
 El sistema completo son **dos herramientas independientes y compatibles** que comparten el ecosistema `.harness/`:
 
 | Herramienta | Responsabilidad | Instala |
 |---|---|---|
-| **harness-kit** (este repo) | Flujo de trabajo: tareas, estado de sesión, roles de agentes, reglas | `.harness/context/`, `workspaces/`, `rules/`, `STATE.md` |
+| **harness-kit-install** (este repo) | Flujo de trabajo: tareas, estado de sesión, roles de agentes, reglas | `.harness/context/`, `workspaces/`, `rules/`, `STATE.md` |
 | **[harness-okf](https://github.com/csalazart/harness-okf)** | Conocimiento: un cerebro OKF autocontenido del dominio del proyecto (fuentes, conceptos, playbooks) | `.harness/llm-wiki/`, skills `okf-*` |
 
 Para instalar el kit completo:
-1. Instala primero harness-kit (Opción A/B)
+1. Instala primero harness-kit-install (Opción A/B)
 2. Después sigue el `prompts/01_init.md` de [harness-okf](https://github.com/csalazart/harness-okf) — detecta el `.harness/` existente y añade solo sus piezas (nunca toca las tuyas)
 
 > Cualquier orden funciona, y cada herramienta es totalmente usable por sí sola.

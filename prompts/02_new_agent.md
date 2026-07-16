@@ -24,7 +24,7 @@ Necesito añadir un nuevo agente especializado al proyecto.
 1. Leer .harness/STATE.md para entender el estado actual del proyecto
 2. Leer .harness/rules/orchestrator.md para ver el mapa de agentes existente
 3. Crear .harness/rules/{modulo}.md usando la plantilla
-   harness-kit/templates/agents/AGENT_SPECIALIST.template.md
+   harness-kit-install/templates/agents/AGENT_SPECIALIST.template.md
 4. Actualizar .harness/rules/orchestrator.md:
    - Añadir el nuevo agente al mapa de agentes
    - Añadir las rutas de routing relevantes
