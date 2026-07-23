@@ -14,35 +14,55 @@
 
 ---
 
+## Modo de operación
+
+1. **Modo PLAN** — recopila información y define un plan con el usuario. No se realizan cambios en el código ni en el repositorio.
+2. **Modo ACT** — implementa el plan ya aprobado.
+3. **Modo TUTOR** — se activa cuando el prompt del usuario contiene la palabra `TUTOR:`. Modo puramente educativo: nunca ejecuta ni modifica código. Enseña el código y la modificación propuesta, explicando el proceso al usuario si lo requiere.
+
+- Empezar siempre en modo PLAN. No pasar a modo ACT hasta que el usuario apruebe el plan explícitamente.
+- Imprimir `# Modo: PLAN`, `# Modo: ACT` o `# Modo: TUTOR` al inicio de cada respuesta.
+- Permanecer en modo PLAN salvo que el usuario escriba `ACT`. Volver a modo PLAN cuando el usuario escriba `PLAN`.
+- Activar modo TUTOR cuando el prompt contenga `TUTOR:`. Permanecer en modo TUTOR hasta que el usuario indique explícitamente un cambio de modo (`PLAN` o `ACT`).
+- En modo PLAN: mostrar siempre el plan completo y actualizado en cada respuesta.
+- En modo TUTOR: nunca tocar ficheros ni ejecutar comandos que modifiquen el repositorio — solo explicar el código, la modificación propuesta y el razonamiento detrás, paso a paso si el usuario lo requiere.
+
+---
+
 ## 1. Arranque obligatorio (Handshake)
 
-> Ejecutar esta secuencia ANTES de responder al usuario o tocar cualquier archivo.
+> Ejecutar esta secuencia UNA VEZ, al inicio de la sesión — antes de responder al primer mensaje del usuario o de tocar cualquier archivo. NO repetir en turnos posteriores de la misma conversación salvo que el usuario indique explícitamente que ha cambiado el contexto (nueva rama, nuevo workspace, etc.).
 
 **Paso 0 — FAST LOAD (contexto de sesión):**
-Si existen los ficheros de contexto, leer estos en orden — total ~120 líneas:
+Si existen los ficheros de contexto, leerlos EN UNA SOLA TANDA (llamadas en paralelo, no secuenciales) — total ~120 líneas. Prioridad de lectura si hay que resumir por espacio:
 1. `.harness/context/activeContext.md` — ¿dónde estamos? ¿hay tarea en progreso?
 2. `.harness/context/progress.md` — estado por módulos
 3. `.harness/context/plans-index.md` — planes activos (saltar en FAST LOAD EXTREME si no se requieren)
 
 > Mapa de la memoria: si no se dispone de `graphify`, lee `.harness/context/index.md` como índice principal de archivos.
 
+> ⚠️ Los ficheros de `.harness/context/` son VOLÁTILES y pueden quedar desactualizados respecto al código real. Si la respuesta al usuario depende de "¿está esto implementado / funciona esto?", contrastar contra el código (Grep/Read) antes de responder — no citar estos ficheros como fuente única para ese tipo de pregunta.
+
 Mostrar resumen compacto tras leerlos:
 ```
 Contexto cargado: [proyecto] | Rama: [rama] | Próximo: [próximo paso] | Bloqueantes: [ninguno/lista]
 ```
 
-**Paso 0.5 — Consultas al Grafo (Bajo Demanda):**
-*   Si el proyecto tiene un grafo integrado en `graphify-out/` y necesitas entender la estructura del código, relaciones o buscar funciones/clases, ejecuta directamente:
-    `graphify query "<pregunta>"`
+**Paso 0.5 — Búsqueda de código (cascada Graphify → manual):**
+*   Para entender estructura del código, relaciones entre módulos o localizar funciones/clases, ejecutar SIEMPRE primero el script de consulta (no comprobar `graphify-out/` a mano — el script ya lo hace internamente y falla rápido sin coste si no existe):
+    - Windows: `.\scripts\query-graph.ps1 "<pregunta>"`
+    - Mac/Linux: `./scripts/query-graph.sh "<pregunta>"`
+*   Si el comando devuelve `exit code ≠ 0`, o la salida está vacía / es el aviso de "no se encontró la configuración de Graphify en graphify-out/" → hacer fallback inmediato a Grep/Glob/Explore/Bash find. No reintentar el script, no preguntar al usuario, no comprobar el directorio manualmente antes.
+*   Si el script responde con `exit code 0` pero indica "sin resultados" para una consulta que sí tiene sentido, tratarlo como respuesta real (no como fallo) — no activar el fallback en ese caso.
 
 **Paso 1 — Verificar el entorno (Solo si vas a desarrollar o modificar código):**
 > ℹ️ **Si la sesión es de solo-lectura, Q&A, consultas conceptuales o gestión del backlog (STATE.md), SALTA este paso.**
 ```bash
 node init.js
 ```
-- Si vas a modificar código y termina con `[HARNESS FAIL]` → **STOP. Resolver los errores antes de continuar**
+- Ejecutar una sola vez al inicio de la sesión (no antes de cada edición individual). Si vas a modificar código y termina con `[HARNESS FAIL]` → **STOP. Resolver los errores antes de continuar**. Volver a ejecutar solo si se instalaron/cambiaron dependencias durante la sesión.
 
-**Paso 2 — Leer el estado del proyecto:**
+**Paso 2 — Leer el estado del proyecto (solo si vas a planificar/asignar tareas, o si el Paso 0 no fue suficiente para entender el backlog):**
 1. `.harness/STATE.md` — backlog de tareas, decisiones tomadas y bloqueos activos
 
 **Paso 3 — Revisar workspaces activos:**
@@ -83,6 +103,7 @@ node init.js
 *   **Escribir en disco, no en chat**: Decisiones, reportes y hallazgos van en `session.md` de la tarea.
 *   **Verificación real obligatoria**: Ejecutar tests y comandos reales, no asumir que funciona.
 *   **Commits antes de cerrar**: Toda sesión termina con commit semántico y `node init.js` en verde.
+*   **Jerarquía de búsqueda (de más barato a más caro)**: Graphify (Paso 0.5) → Glob (nombres de fichero) → Grep (símbolos/contenido) → subagente Explore (solo si se prevén 3+ rondas de búsqueda o exploración muy abierta). No saltar directo al subagente si una búsqueda dirigida basta.
 
 ---
 

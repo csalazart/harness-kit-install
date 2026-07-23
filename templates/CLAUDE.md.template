@@ -8,15 +8,7 @@
 
 ## ⚡ ARRANQUE OBLIGATORIO — Leer esto primero
 
-> Ejecutar esta secuencia ANTES de responder al usuario.
-
----
-
-## 🎭 Modos de Operación
-
-- **PLAN** (default): genera propuestas y planes — NO ejecuta cambios en código ni ficheros del proyecto
-- **ACT**: el usuario escribe "ACT" para autorizar ejecución del plan aprobado
-- **TUTOR**: el usuario escribe "TUTOR:" para modo educativo paso a paso con confirmación
+> Ejecutar esta secuencia ANTES de responder al usuario. El modo de operación (PLAN/ACT/TUTOR) y sus reglas están definidos en `AGENTS.md` — ver sección "Modo de operación".
 
 ---
 
