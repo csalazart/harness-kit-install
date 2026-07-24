@@ -21,6 +21,15 @@ if [ ! -f "$PYTHON_FILE" ]; then
     exit 1
 fi
 
+GRAPH_JSON="$ROOT/graphify-out/graph.json"
+if [ -f "$GRAPH_JSON" ] && command -v git >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    GRAPH_MTIME=$(date -r "$GRAPH_JSON" +%s 2>/dev/null || echo 0)
+    LAST_COMMIT=$(git log -1 --format=%ct 2>/dev/null || echo 0)
+    if [ "$LAST_COMMIT" -gt "$GRAPH_MTIME" ]; then
+        echo -e "\e[33m⚠️ El grafo podría estar desactualizado (hay commits posteriores a la última actualización). Considera ejecutar ./scripts/update-graph.sh\e[0m"
+    fi
+fi
+
 PYTHON_BIN=$(cat "$PYTHON_FILE" | tr -d '\r')
 echo -e "\e[36m🔍 Interrogando al grafo de conocimiento de forma semántica...\e[0m"
 "$PYTHON_BIN" -m graphify query "$QUERY"

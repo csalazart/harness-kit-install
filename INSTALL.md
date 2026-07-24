@@ -7,14 +7,16 @@
 ## Lo que necesitas antes de empezar
 
 - [ ] **Node.js** instalado en tu máquina → [nodejs.org](https://nodejs.org) (descarga la versión LTS)
+- [ ] **Python 3.10+** instalado en tu máquina → [python.org](https://www.python.org/downloads/) (requerido por Graphify, obligatorio en este kit para que el proyecto quede indexado)
 - [ ] **Claude Code** (u otro agente IA) abierto en tu proyecto
 - [ ] La carpeta `harness-kit-install/` (esta misma carpeta que estás leyendo)
 
-Verifica Node.js abriendo una terminal y ejecutando:
+Verifica Node.js y Python abriendo una terminal y ejecutando:
 ```
 node -v
+python --version
 ```
-Debe mostrar algo como `v20.x.x`. Si da error, instala Node.js primero.
+Debe mostrar algo como `v20.x.x` y `Python 3.10+`. Si alguno da error, instálalo primero.
 
 ---
 
@@ -155,14 +157,16 @@ de cada agente durante la instalación.
 Sí. Vuelve al Paso 3 y dile al agente:
 `"El harness no quedó bien instalado, por favor revisa y completa la instalación leyendo harness-kit-install/prompts/01_init.md"`
 
-**¿Puedo agregar graphify después de la instalación?**
-Sí. En cualquier momento dile al agente: `/graphify` y configurará todo.
-Requiere Python instalado previamente (no usa npm/pnpm).
+**¿Graphify es obligatorio?**
+Sí. El agente lo instala automáticamente durante la construcción del harness (Fase C
+del prompt de instalación) — es un requisito para que `node init.js` reporte
+`[HARNESS OK]`. Solo necesitas tener Python 3.10+ instalado de antemano; el skill
+instala el paquete `graphifyy` por ti la primera vez que ejecuta `/graphify`.
 
 **¿Necesito Python para graphify?**
 Sí. Graphify es una librería Python. Instálalo desde
-[python.org](https://www.python.org/downloads/). El skill instala el paquete
-`graphifyy` automáticamente la primera vez que ejecutas `/graphify`.
+[python.org](https://www.python.org/downloads/) **antes** de empezar el Paso 3 de
+esta guía — el agente lo necesitará para completar la instalación. No usa npm/pnpm.
 
 ---
 

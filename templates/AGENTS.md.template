@@ -39,7 +39,7 @@ Si existen los ficheros de contexto, leerlos EN UNA SOLA TANDA (llamadas en para
 2. `.harness/context/progress.md` — estado por módulos
 3. `.harness/context/plans-index.md` — planes activos (saltar en FAST LOAD EXTREME si no se requieren)
 
-> Mapa de la memoria: si no se dispone de `graphify`, lee `.harness/context/index.md` como índice principal de archivos.
+> Mapa de la memoria de sesión: `.harness/context/index.md` indica qué fichero de `.harness/context/` leer y cuándo — es solo un índice de la capa de memoria, NO un sustituto de la búsqueda de código. Para localizar código sin grafo, usa la cascada del Paso 0.5 (Grep/Glob/Explore).
 
 > ⚠️ Los ficheros de `.harness/context/` son VOLÁTILES y pueden quedar desactualizados respecto al código real. Si la respuesta al usuario depende de "¿está esto implementado / funciona esto?", contrastar contra el código (Grep/Read) antes de responder — no citar estos ficheros como fuente única para ese tipo de pregunta.
 

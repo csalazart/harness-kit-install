@@ -87,6 +87,26 @@ Permite hacer preguntas inferidas sobre las relaciones o arquitectura del códig
 
 ---
 
+## 🚫 Regla obligatoria: `graphify-out/` NUNCA se comitea
+
+`graphify-out/` es un artefacto **generado localmente**, no código fuente:
+
+*   `graphify-out/.graphify_python` guarda la ruta absoluta del intérprete Python
+    de **esta máquina** — comitearlo rompe la instalación en cualquier otro
+    equipo, CI o colaborador que clone el repo.
+*   `graph.json` / `graph.html` / `manifest.json` se **regeneran automáticamente**
+    en cada cierre de tarea (`harness-finish.js`/`.cjs` ejecuta `update-graph` al
+    final). Si estuviera versionado, cada commit arrastraría un diff enorme de
+    un artefacto derivado y 100% reproducible.
+*   Es la misma categoría que `node_modules/`, `dist/` o `.venv/`.
+
+**Verifica siempre** que `graphify-out/` está en el `.gitignore` del proyecto —
+si el `.gitignore` no existe, créalo. Si ya tienes `graphify-out/` comiteado por
+error, sácalo del índice de git (`git rm -r --cached graphify-out/`) y añádelo
+al `.gitignore` antes del siguiente commit.
+
+---
+
 ## 🛠️ Resolución de Problemas (Troubleshooting)
 
 *   **Error: "No se encontró la configuración de Graphify en 'graphify-out/'"**

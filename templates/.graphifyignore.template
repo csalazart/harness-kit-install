@@ -12,9 +12,12 @@ graphify-out/
 coverage/
 .nyc_output/
 memory-bank/
-plan/
-docs/
 generated/
+
+# NOTA: docs/ y plan/ NO se excluyen a propósito — suelen contener arquitectura,
+# ADRs y estado del proyecto que los agentes necesitan poder consultar vía grafo.
+# Los binarios/PDFs/assets dentro de esas carpetas ya quedan filtrados por
+# extensión más abajo (secciones 3-5), así que solo entra texto plano relevante.
 
 # ── 2. DEPENDENCIAS Y DESPLIEGUES (EVITAR INFLACIÓN)
 node_modules/

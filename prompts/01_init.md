@@ -72,11 +72,60 @@ Crea la carpeta `scripts/` en la raíz.
 Copia `harness-kit-install/templates/harness-start.js.template` a `scripts/harness-start.js`
 Copia `harness-kit-install/templates/harness-finish.js.template` a `scripts/harness-finish.js`
 
-*   **Scripts de Soporte de Graphify (Bajo Demanda):**
+*   **Scripts de Soporte de Graphify:**
     Copia `harness-kit-install/templates/update-graph.ps1.template` a `scripts/update-graph.ps1`
     Copia `harness-kit-install/templates/update-graph.sh.template` a `scripts/update-graph.sh`
     Copia `harness-kit-install/templates/query-graph.ps1.template` a `scripts/query-graph.ps1`
     Copia `harness-kit-install/templates/query-graph.sh.template` a `scripts/query-graph.sh`
+
+### 3.5. Instalación de Graphify (OBLIGATORIO)
+
+Este harness requiere que el proyecto quede indexado semánticamente con **graphify**
+para que los agentes puedan localizar código de forma precisa y barata en tokens
+(ver Paso 0.5 de `AGENTS.md`). No es opcional: `node init.js` (Sección 7) fallará
+con `[HARNESS FAIL]` si no está instalado.
+
+**Requisito previo: Python** — graphify es una librería Python (`graphifyy`).
+Para instrucciones detalladas por sistema operativo consulta `docs/GRAPHIFY_GUIDE.md`
+(ya deberías haberla copiado en la Sección 5; si aún no, cópiala ahora).
+
+Verifica que tienes Python instalado:
+
+```bash
+python --version
+```
+
+Debe mostrar algo como `Python 3.10+`. Si no lo tienes:
+- Descárgalo desde [python.org](https://www.python.org/downloads/) (versión LTS)
+- O usa `winget install Python.Python.3.12` (Windows)
+- O `brew install python` (Mac)
+
+a) Copia el skill:
+   ```
+   harness-kit-install/templates/skills/graphify/ → .claude/skills/graphify/
+   harness-kit-install/templates/skills/graphify/ → .agents/skills/graphify/
+   ```
+
+b) Crea `.graphifyignore` en la raíz del proyecto copiando
+   `harness-kit-install/templates/.graphifyignore.template` tal cual. Ya excluye
+   dependencias, binarios y metadatos — y deliberadamente NO excluye `docs/` ni
+   `plan/`, para que la documentación de arquitectura y planes quede indexada.
+
+c) Ejecuta `/graphify` ahora mismo para generar `graphify-out/graph.json` y
+   `graphify-out/GRAPH_REPORT.md`. Esto instala automáticamente el paquete
+   `graphifyy` la primera vez.
+
+d) Verifica que `graphify-out/.graphify_python` y `graphify-out/graph.json`
+   existen antes de continuar a la Sección 7 (`node init.js`).
+
+e) Añade `graphify-out/` al `.gitignore` del proyecto (créalo si no existe).
+   **Nunca comitear esta carpeta**: `.graphify_python` contiene una ruta local
+   de Python específica de esta máquina, y `graph.json`/`graph.html` se
+   regeneran automáticamente en cada `harness-finish.js`/`.cjs` — comitearlos
+   ensuciaría el historial con diffs enormes de un artefacto derivado.
+
+> Nota: graphify es Python puro — no usa npm ni pnpm. La instalación del
+> paquete `graphifyy` la maneja el propio skill automáticamente.
 
 ### 4. Entorno de Agentes (.harness/)
 Crea las siguientes carpetas para la arquitectura Task-Driven:
@@ -105,6 +154,9 @@ Copia también las reglas técnicas relevantes del stack desde `rules-library/` 
 ### 7. init.js
 Adapta `harness-kit-install/templates/init.js.template` al stack detectado y crea `init.js` en la raíz.
 Verifica que al ejecutar `node init.js` termina con `[HARNESS OK]` antes de continuar.
+
+> ⚠️ `node init.js` comprueba que graphify está instalado (Sección 3.5) — si no lo
+> instalaste todavía, hazlo ahora o `init.js` devolverá `[HARNESS FAIL]`.
 
 > **Nota sobre verificación del entorno:** Se recomienda `init.js` (Node.js, cross-platform).
 > Existe también `harness-kit-install/templates/init.sh.template` como alternativa para entornos
@@ -218,65 +270,8 @@ Crea `.harness/context/index.md` desde
 2. Muéstrame el árbol de ficheros generado (incluyendo `.harness/context/` y `.harness/skills/`)
 3. Dime cuál es el primer agente que debo abrir y por qué
 
-4. **(Opcional - RECOMENDADO) Instala graphify para graficar tu código**
-
-   Antes de terminar, ¿quieres que instale **graphify**? Es una herramienta que
-   convierte tu código en un grafo de conocimiento navegable de forma semántica.
-   Se recomienda fuertemente su instalación para proyectos complejos ya que 
-   permite a los agentes orientarse de forma automática y precisa.
-
-   **Si deseas instalarlo:**
-
-   **Requisito previo: Python** — graphify es una librería Python (`graphifyy`).
-   Para ver las instrucciones paso a paso detalladas por sistema operativo (Windows, macOS, Linux)
-   sobre cómo configurar Python y utilizar los scripts utilitarios integrados, 
-   **consulta la guía local en: `docs/GRAPHIFY_GUIDE.md`**.
-
-   Antes de continuar, verifica que tienes Python instalado:
-
-   ```bash
-   python --version
-   ```
-
-   Debe mostrar algo como `Python 3.10+`. Si no lo tienes:
-   - Descárgalo desde [python.org](https://www.python.org/downloads/) (versión LTS)
-   - O usa `winget install Python.Python.3.12` (Windows)
-   - O `brew install python` (Mac)
-
-   El skill instalará `graphifyy` automáticamente la primera vez que ejecutes `/graphify`,
-   pero **necesitas Python previamente instalado en tu máquina**.
-
-   a) Copia el skill:
-      ```
-      harness-kit-install/templates/skills/graphify/ → .claude/skills/graphify/
-      harness-kit-install/templates/skills/graphify/ → .agents/skills/graphify/
-      ```
-
-   b) Crea `.graphifyignore` en la raíz del proyecto (usa `harness-kit-install/templates/.graphifyignore.template` como base):
-      ```
-      node_modules/
-      dist/
-      build/
-      .git/
-      .harness/
-      graphify-out/
-      *.log
-      *.tmp
-      ```
-
-   c) Verifica que el skill quede accesible:
-      - Para Claude Code: `.claude/skills/graphify/`
-      - Para cualquier IA: `.agents/skills/graphify/`
-
-   **Si no deseas instalarlo**, omite este paso. Puedes añadirlo en cualquier
-   momento ejecutando simplemente `/graphify` en el chat.
-
-   > Nota: graphify es Python puro — no usa npm ni pnpm. La instalación del
-   > paquete `graphifyy` la maneja el propio skill automáticamente.
-
-   d) Si instalaste graphify, ejecuta `/graphify` ahora para generar
-      `graphify-out/GRAPH_REPORT.md` — útil para entender la estructura real del
-      código y afinar las áreas/reglas del harness.
+4. Confirma que `graphify-out/GRAPH_REPORT.md` existe (se generó en la Sección 3.5,
+   obligatoria) y muéstraselo al usuario como resumen de la indexación del proyecto.
 
 ## Reglas que debes seguir durante todo el proceso
 

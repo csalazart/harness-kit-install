@@ -59,6 +59,9 @@
 - Nunca commitear sin que `node init.js` termine con `[HARNESS OK]`
 - Nunca modificar `.harness/STATE.md` si eres un agente especialista
 - Nunca abrir un nuevo workspace sin cerrar el anterior con `harness-finish.js`
+- Nunca commitear `graphify-out/` — es un artefacto generado localmente (contiene
+  la ruta de Python de esta máquina en `.graphify_python` y se regenera en cada
+  `harness-finish.js`). Debe estar en `.gitignore`; si no lo está, añádelo.
 - {{PROJECT_SPECIFIC_RESTRICTIONS}}
 
 ---
