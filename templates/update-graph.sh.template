@@ -15,6 +15,6 @@ fi
 
 PYTHON_BIN=$(cat "$PYTHON_FILE" | tr -d '\r')
 echo -e "\e[36m🔄 Actualizando grafo de conocimiento con Graphify de forma incremental...\e[0m"
-"$PYTHON_BIN" -m graphify --update .
+"$PYTHON_BIN" -m graphify update .
 
 echo -e "\e[32m✅ [GRAFO ACTUALIZADO] — Graphify sincronizó los cambios locales con éxito.\e[0m"

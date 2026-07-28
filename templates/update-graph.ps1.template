@@ -18,7 +18,7 @@ if (-not (Test-Path $python_file)) {
 
 $python_bin = (Get-Content $python_file).Trim()
 Write-Host "🔄 Actualizando grafo de conocimiento con Graphify de forma incremental..." -ForegroundColor Cyan
-& $python_bin -m graphify --update .
+& $python_bin -m graphify update .
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host "✅ [GRAFO ACTUALIZADO] — Graphify sincronizó los cambios locales con éxito." -ForegroundColor Green

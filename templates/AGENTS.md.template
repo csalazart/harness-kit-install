@@ -54,6 +54,7 @@ Contexto cargado: [proyecto] | Rama: [rama] | Próximo: [próximo paso] | Bloque
     - Mac/Linux: `./scripts/query-graph.sh "<pregunta>"`
 *   Si el comando devuelve `exit code ≠ 0`, o la salida está vacía / es el aviso de "no se encontró la configuración de Graphify en graphify-out/" → hacer fallback inmediato a Grep/Glob/Explore/Bash find. No reintentar el script, no preguntar al usuario, no comprobar el directorio manualmente antes.
 *   Si el script responde con `exit code 0` pero indica "sin resultados" para una consulta que sí tiene sentido, tratarlo como respuesta real (no como fallo) — no activar el fallback en ese caso.
+*   **Excepción con preguntas de "quién importa/usa X"**: Graphify solo resuelve alias de import (`@/`, `@@/`, `~/`, etc.) leyendo `tsconfig.json` vía `extends` — no vía `references`. Si esa cadena se rompe (p. ej. en proyectos Nuxt donde `.nuxt/` no está compilado localmente), una respuesta de "no hay relación" puede ser un falso negativo del indexador, no un hecho real. Ante dudas sobre uso/relación de un fichero vía alias, confirmar con `Grep` sobre el patrón de alias antes de concluir que no se usa en ningún sitio.
 
 **Paso 1 — Verificar el entorno (Solo si vas a desarrollar o modificar código):**
 > ℹ️ **Si la sesión es de solo-lectura, Q&A, consultas conceptuales o gestión del backlog (STATE.md), SALTA este paso.**
