@@ -1,0 +1,5 @@
+# nuxt.txt — Nuxt
+
+.nuxt/
+.output/
+nuxt.config.*

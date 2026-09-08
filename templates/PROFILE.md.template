@@ -1,0 +1,42 @@
+# PROFILE.md — Perfil del grafo dual de {{PROJECT_NAME}}
+> Registrado durante `prompts/01_init.md` §3.5.0. **No es opcional.**
+> `init.js`/`init.sh` leen este fichero para saber qué grafos deben existir —
+> sin él no se puede distinguir "el MCP no está porque el perfil es DOC" de
+> "el MCP no está porque la instalación falló".
+
+- **Kit-Version:** 1.4.0
+  (versión del harness-kit instalada — la lee cualquier futuro prompt de
+  actualización para saber de qué versión parte, en vez de adivinarlo por
+  ausencia/presencia de ficheros)
+- **Perfil:** {{DOC|MIXTO|CODE}}
+- **Fecha de perfilado:** {{FECHA}}
+- **Ficheros de código fuente contados:** {{N}}
+  (excluye dependencias, artefactos de build y generados — ver criterio en `prompts/01_init.md` Fase B punto 6)
+- **Desglose por extensión:**
+  - `.{{ext}}`: {{n}}
+  - ...
+- **Stack detectado:** {{stack}}
+- **¿Es un proyecto de infraestructura/configuración (docker-compose, IaC, scripts de sistema) más que de aplicación?** {{sí/no}}
+  - Si sí: tratado como perfil DOC por defecto (no hay símbolos de aplicación que un LSP resuelva), confirmado con el usuario.
+
+## Decisión sobre `codebase-memory-mcp`
+
+- **¿Se instala el MCP?** {{sí/no/opcional-no-instalado}}
+- **Motivo:** {{ej. "perfil CODE, >100 ficheros" | "perfil DOC, código insuficiente para amortizar el binario" | "perfil MIXTO, el usuario decidió no instalarlo por coste de contexto"}}
+- **`--tool-profile` usado (si se instaló):** {{ninguno|analysis|scout}}
+- **Delta de contexto medido (`/context` antes/después):** {{tokens}}
+  - Medido el: {{fecha}}
+  - Si el perfil es MIXTO y el delta resultó desproporcionado, se anota aquí la decisión tomada (mantener / desinstalar).
+
+## Verificación de cobertura de lenguaje (solo si se instaló el MCP)
+
+- **Símbolo real de prueba usado:** `{{símbolo}}`
+- **`search_graph` lo encontró:** {{sí/no}}
+- **Lenguajes con cobertura no garantizada en este proyecto (Solidity, Vue SFC, imports remotos de Deno, etc.):** {{lista o "ninguno detectado"}}
+  - Si algún lenguaje falla: anotar aquí y considerar devolverlo al grafo de graphify (ver `docs/KNOWLEDGE_GRAPHS.md`).
+
+## Historial de cambios de perfil
+
+| Fecha | Perfil anterior | Perfil nuevo | Motivo |
+| --- | --- | --- | --- |
+| {{fecha}} | — | {{perfil inicial}} | Perfilado inicial |

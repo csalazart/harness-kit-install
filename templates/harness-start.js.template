@@ -55,6 +55,11 @@ ${taskDesc ? `> **Descripción:** ${taskDesc}` : ''}
 ## 🎯 Objetivo de esta sesión
 ${objetivoPlaceholder}
 
+## 🚫 Fuera de alcance (opcional — solo si hay riesgo real de scope creep)
+[Lo que esta tarea NO va a hacer, aunque esté relacionado — deja constancia
+para no reabrir el debate a mitad de sesión. Recomendado para tareas de
+complejidad Media o superior; omitir en tareas Simple]
+
 ## 📋 Criterios de aceptación
 - [ ] Criterio 1
 - [ ] Criterio 2

@@ -55,7 +55,7 @@ echo "════════════════════════�
 # No modificar este bloque.
 # ──────────────────────────────────────────────────────
 echo ""
-echo "  ▸ [1/2] Estructura del Harness"
+echo "  ▸ [1/3] Estructura del Harness"
 
 # Archivos base obligatorios
 [ -f "AGENTS.md" ]              && check "AGENTS.md existe"              "ok" \
@@ -77,14 +77,60 @@ if [ -f ".harness/STATE.md" ]; then
 fi
 
 # ──────────────────────────────────────────────────────
-# BLOQUE 2 — Verificación del Stack (VARIABLE)
+# BLOQUE 2 — Grafos de Conocimiento (según perfil)  (FIJO, no modificar)
+# ──────────────────────────────────────────────────────
+echo ""
+echo "  ▸ [2/3] Grafos de Conocimiento"
+
+# 2.a — Leer el perfil declarado
+PROFILE=""
+if [ -f ".harness/PROFILE.md" ]; then
+  # Tolerante al estilo de markdown: acepta "**Perfil**: X", "**Perfil:** X"...
+  PROFILE=$(grep -oiE '^-?\s*\*{0,2}Perfil[[:space:]*:]*(DOC|MIXTO|CODE)' .harness/PROFILE.md \
+              | grep -oiE 'DOC|MIXTO|CODE' | head -n1 | tr '[:lower:]' '[:upper:]')
+fi
+
+if [ -n "$PROFILE" ]; then
+  check "Perfil del proyecto declarado (.harness/PROFILE.md): $PROFILE" "ok"
+else
+  check "Perfil del proyecto declarado (.harness/PROFILE.md)" \
+    "falta .harness/PROFILE.md o no declara un perfil válido (DOC|MIXTO|CODE). Ver prompts/01_init.md §3.5.0."
+fi
+
+# 2.b — Graphify: obligatorio en TODOS los perfiles
+[ -f "graphify-out/.graphify_python" ] \
+  && check "Graphify inicializado (graphify-out/.graphify_python)" "ok" \
+  || check "Graphify inicializado (graphify-out/.graphify_python)" \
+       "graphify es obligatorio en todos los perfiles. Ejecuta /graphify desde el agente de IA."
+
+[ -f "graphify-out/graph.json" ] \
+  && check "Grafo de conocimiento generado (graphify-out/graph.json)" "ok" \
+  || check "Grafo de conocimiento generado (graphify-out/graph.json)" \
+       "el grafo no se ha generado. Ejecuta /graphify. Ver prompts/01_init.md §3.5.1 paso c."
+
+# 2.c — MCP: obligatorio solo si el perfil lo requiere
+if [ "$PROFILE" = "CODE" ]; then
+  if [ -f ".mcp.json" ] && grep -q "codebase-memory" .mcp.json 2>/dev/null; then
+    check "codebase-memory declarado en .mcp.json (perfil CODE)" "ok"
+  else
+    check "codebase-memory declarado en .mcp.json (perfil CODE)" \
+      "el perfil CODE requiere codebase-memory-mcp. Ver prompts/01_init.md §3.5.2."
+  fi
+elif [ "$PROFILE" = "MIXTO" ]; then
+  echo "  ℹ️   Perfil MIXTO — codebase-memory-mcp es opcional (ver .harness/PROFILE.md)"
+elif [ "$PROFILE" = "DOC" ]; then
+  echo "  ℹ️   Perfil DOC — sin MCP por diseño; graphify cubre ambos dominios"
+fi
+
+# ──────────────────────────────────────────────────────
+# BLOQUE 3 — Verificación del Stack (VARIABLE)
 #
 # Este bloque se rellena durante prompts/01_init.md,
 # cuando la IA detecta el stack del proyecto.
 # Descomenta y adapta la sección que corresponda.
 # ──────────────────────────────────────────────────────
 echo ""
-echo "  ▸ [2/2] Verificación del Stack"
+echo "  ▸ [3/3] Verificación del Stack"
 
 # ── Node.js / pnpm ────────────────────────────────────
 # command -v node &>/dev/null \

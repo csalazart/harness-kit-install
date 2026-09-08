@@ -1,0 +1,24 @@
+# index-code.ps1 — Reindexado del grafo de CÓDIGO (codebase-memory-mcp)
+# Generado por harness-kit · Proyecto: {{PROJECT_NAME}}
+#
+# Solo aplica a perfiles CODE y MIXTO-con-MCP (ver .harness/PROFILE.md).
+# Usa el modo CLI one-shot de codebase-memory-mcp — nunca arranca el daemon,
+# apto para scripts y hooks. Usa flags, nunca JSON crudo (deprecado).
+#
+# USO: .\scripts\index-code.ps1
+
+$ErrorActionPreference = "Stop"
+
+if (-not (Get-Command codebase-memory-mcp -ErrorAction SilentlyContinue)) {
+    Write-Host "codebase-memory-mcp no está en el PATH. Ver docs/KNOWLEDGE_GRAPHS.md." -ForegroundColor Red
+    exit 1
+}
+
+Write-Host "Detectando cambios desde el último índice..." -ForegroundColor Cyan
+codebase-memory-mcp cli detect_changes
+
+Write-Host "Reindexando (modo fast)..." -ForegroundColor Cyan
+codebase-memory-mcp cli index_repository --repo-path . --mode fast
+
+Write-Host "Estado del índice:" -ForegroundColor Cyan
+codebase-memory-mcp cli index_status

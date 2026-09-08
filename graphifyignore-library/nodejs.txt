@@ -1,0 +1,8 @@
+# nodejs.txt — Node.js / gestores de paquetes JS
+
+node_modules/
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+tsconfig.json
+tsconfig.*.json

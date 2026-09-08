@@ -35,6 +35,7 @@ scripts/
 └── harness-finish.js              ← archives and closes a workspace
 .harness/
 ├── STATE.md                       ← backlog + decisions (source of truth)
+├── PROFILE.md                     ← project profile: DOC/MIXTO/CODE, drives which graphs get installed
 ├── rules/
 │   ├── orchestrator.md            ← orchestrator agent rules
 │   ├── git-reviewer.md            ← commit reviewer agent
@@ -42,7 +43,14 @@ scripts/
 ├── workspaces/                    ← temporary task workspaces
 └── logs/
     └── SUMMARY.md                 ← reverse-chronological history (auto-generated)
+graphify-out/                      ← knowledge graph (docs, .harness/, plan/) — partially versioned
+.mcp.json                          ← codebase-memory-mcp server, only if the profile requires it
 ```
+
+> **Dual knowledge graph (v4):** `graphify` (knowledge) always gets installed;
+> `codebase-memory-mcp` (code) only if the project's profile is CODE, or MIXTO
+> and you opt in. See `docs/KNOWLEDGE_GRAPHS.md` once installed for the full
+> routing table between the two.
 
 ---
 

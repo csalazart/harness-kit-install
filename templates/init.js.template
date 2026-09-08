@@ -94,20 +94,61 @@ if (!fs.existsSync(skillsSrc)) {
 }
 
 // ──────────────────────────────────────────────────────
-// BLOQUE 3 — Grafo de Conocimiento (Graphify) — OBLIGATORIO
+// BLOQUE 3 — Grafos de Conocimiento (según perfil)
 // ──────────────────────────────────────────────────────
-console.log("\n  ▸ [3/5] Grafo de Conocimiento (Graphify)");
+console.log("\n  ▸ [3/5] Grafos de Conocimiento");
 
-check('Graphify inicializado (graphify-out/.graphify_python)',
-  fs.existsSync(path.join(__dirname, 'graphify-out', '.graphify_python')),
-  'Graphify es obligatorio en este harness para que el proyecto quede correctamente indexado. Ejecuta /graphify desde el agente de IA para instalarlo.'
+// 3.a — Leer el perfil
+const profilePath = path.join(__dirname, '.harness', 'PROFILE.md');
+let profile = null;
+if (fs.existsSync(profilePath)) {
+  const raw = fs.readFileSync(profilePath, 'utf8');
+  // Tolerante al estilo de markdown: acepta "**Perfil**: X", "**Perfil:** X",
+  // "- Perfil: X"... — no asumir en qué lado del ":" cierra el negrita.
+  const m = raw.match(/^-?\s*\*{0,2}Perfil[\s*:]*(DOC|MIXTO|CODE)\b/mi);
+  profile = m ? m[1].toUpperCase() : null;
+}
+
+check('Perfil del proyecto declarado (.harness/PROFILE.md)',
+  profile !== null,
+  'Falta .harness/PROFILE.md o no declara un perfil válido (DOC|MIXTO|CODE). ' +
+  'Es obligatorio: sin él no se puede verificar qué grafos deben existir. ' +
+  'Ver prompts/01_init.md §3.5.0.'
 );
 
-const graphJsonPath = path.join(__dirname, 'graphify-out', 'graph.json');
-if (fs.existsSync(graphJsonPath)) {
-  console.log('  ℹ️   graphify-out/graph.json presente ✅');
-} else {
-  console.log('  ⚠️   graphify-out/graph.json no encontrado — el grafo no se ha generado todavía (ejecuta /graphify)');
+// 3.b — Graphify: obligatorio en TODOS los perfiles
+check('Graphify inicializado (graphify-out/.graphify_python)',
+  fs.existsSync(path.join(__dirname, 'graphify-out', '.graphify_python')),
+  'Graphify es obligatorio en todos los perfiles. Ejecuta /graphify desde el agente de IA.'
+);
+
+check('Grafo de conocimiento generado (graphify-out/graph.json)',
+  fs.existsSync(path.join(__dirname, 'graphify-out', 'graph.json')),
+  'El grafo no se ha generado. La instalación no está completa: ejecuta /graphify. ' +
+  'Ver prompts/01_init.md §3.5.1 paso c.'
+);
+
+// 3.c — MCP: obligatorio solo si el perfil lo requiere
+if (profile === 'CODE') {
+  const mcpPath = path.join(__dirname, '.mcp.json');
+  let hasMcp = false;
+  if (fs.existsSync(mcpPath)) {
+    try {
+      const cfg = JSON.parse(fs.readFileSync(mcpPath, 'utf8'));
+      hasMcp = !!(cfg.mcpServers && cfg.mcpServers['codebase-memory']);
+    } catch (e) {
+      console.log('  ⚠️   .mcp.json existe pero NO es JSON válido: ' + e.message);
+      console.log('       (causa habitual en Windows: backslashes sin escapar en "command")');
+    }
+  }
+  check('codebase-memory declarado en .mcp.json (perfil CODE)',
+    hasMcp,
+    'El perfil CODE requiere codebase-memory-mcp. Ver prompts/01_init.md §3.5.2.'
+  );
+} else if (profile === 'MIXTO') {
+  console.log('  ℹ️   Perfil MIXTO — codebase-memory-mcp es opcional (ver .harness/PROFILE.md)');
+} else if (profile === 'DOC') {
+  console.log('  ℹ️   Perfil DOC — sin MCP por diseño; graphify cubre ambos dominios');
 }
 
 // ──────────────────────────────────────────────────────

@@ -1,0 +1,8 @@
+# solidity-hardhat.txt — Solidity / Hardhat
+
+artifacts/
+cache/
+typechain/
+typechain-types/
+deployments/
+hardhat.config.*
