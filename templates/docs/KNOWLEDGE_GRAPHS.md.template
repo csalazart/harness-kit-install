@@ -1,0 +1,115 @@
+# KNOWLEDGE_GRAPHS.md — Los dos grafos de {{PROJECT_NAME}}
+> Referencia técnica del modelo de grafo dual (Harness Kit v4). Para el enrutamiento
+> rápido de cada pregunta, ver `AGENTS.md` Paso 0.5 — este documento es el detalle
+> que no cabe ahí por coste de contexto.
+
+## 1. Los dos grafos
+
+| | `codebase-memory-mcp` | `graphify` |
+| --- | --- | --- |
+| Indexa | Código fuente del proyecto | Documentación, `.harness/`, `docs/`, `plan/` |
+| Cómo | AST (tree-sitter) + Hybrid LSP (resolución semántica) | Extracción semántica vía LLM |
+| Dónde vive | SQLite en `~/.cache/codebase-memory-mcp/`, por máquina | `graphify-out/` (parcialmente versionado, ver §4) |
+| Coste de reconstruir | 0 tokens, segundos | Tokens reales (~44.677 tokens para 38.787 palabras, medido) |
+| Se instala | Solo perfiles CODE y MIXTO-con-MCP | Siempre, en los 3 perfiles |
+| Interfaz | 15 herramientas MCP (o menos, según `--tool-profile`) | Scripts `query-graph.*` / `update-graph.*` + skill `graphify` |
+
+## 2. Enrutamiento por tipo de pregunta
+
+| Pregunta | Herramienta | Dominio |
+| --- | --- | --- |
+| ¿Quién llama a X? | `trace_path(function_name="X", direction="inbound")` | Código |
+| ¿Qué llama X? | `trace_path(direction="outbound")` | Código |
+| Contexto completo de llamadas | `trace_path(direction="both")` | Código |
+| Localizar por nombre | `search_graph(name_pattern="...")` | Código |
+| Código muerto | `search_graph(max_degree=0, exclude_entry_points=true)` | Código |
+| Impacto de mis cambios | `detect_changes()` | Código |
+| Ver el código exacto | `get_code_snippet(qualified_name="...")` | Código |
+| Estructura del proyecto | `get_architecture()` | Código |
+| Búsqueda textual en código | `search_code()` (preferir sobre `Grep`) | Código |
+| ¿Por qué se decidió X? / ¿qué exige la regla Y? / ¿qué plan hay para Z? | `query-graph.ps1\|sh "<pregunta>"` | Conocimiento |
+| ¿Está implementado este plan? / ¿la doc describe el código real? | Skill `doc-code-audit` (extrae del grafo de conocimiento, verifica contra el de código) | Mixta |
+
+## 3. Perfiles DOC / MIXTO / CODE
+
+| Perfil | Umbral (ficheros de código) | graphify | `codebase-memory-mcp` |
+| --- | --- | --- | --- |
+| DOC | 0–20 (o proyecto de infraestructura/configuración) | conocimiento + código | no instalado |
+| MIXTO | 21–100 | conocimiento | opcional, `--tool-profile=scout` recomendado |
+| CODE | >100 | conocimiento | sí, superficie completa (o `analysis` sin mutaciones) |
+
+El perfil vigente y su justificación están en `.harness/PROFILE.md`. Puede corregirse manualmente si el conteo automático no refleja bien el proyecto (p. ej. mucho código autogenerado, o un repo pequeño pero crítico).
+
+## 4. Coste y versionado
+
+- **Código:** 0 tokens, se reconstruye en segundos. No se versiona nada de `~/.cache/codebase-memory-mcp/`.
+- **Conocimiento:** cuesta tokens reales (extracción semántica vía LLM). Por eso se versiona **selectivamente**:
+
+```gitignore
+graphify-out/*
+!graphify-out/graph.json
+!graphify-out/GRAPH_REPORT.md
+!graphify-out/.graphify_labels.json
+!graphify-out/manifest.json
+```
+
+```gitattributes
+graphify-out/graph.json    -diff -merge
+graphify-out/manifest.json -diff -merge
+```
+
+`.graphify_python` y `.graphify_root` **nunca** se versionan (rutas absolutas de la máquina). Recomendado usar `GEMINI_API_KEY` para el etiquetado de comunidades si el corpus documental es grande — sin ella, más del 40% de comunidades pueden quedar sin etiquetar (ver troubleshooting).
+
+**Política de conflictos:** ante un conflicto de merge en `graph.json`, **no mergear — regenerar** desde la documentación ya fusionada.
+
+## 5. Mantenimiento — qué evento exige qué acción
+
+| Evento | Acción | Coste |
+| --- | --- | --- |
+| Cambia código | Nada — el MCP tiene watcher y `detect_changes` | 0 |
+| Cambia `.harness/`, `docs/`, `plan/` | `update-graph.ps1\|sh` (filtrado por paths) | tokens |
+| Cierre de tarea (`harness-finish`) | Regenera el grafo **solo si cambió documentación** | condicional |
+| Perfil DOC | `update-graph` cubre todo; no hay MCP | tokens |
+
+Nunca reintroducir código como indexable en `.graphifyignore` en perfiles CODE/MIXTO: duplica el trabajo del MCP con peor precisión y con un coste de tokens que el MCP no tiene.
+
+## 6. Referencia operativa de `codebase-memory-mcp`
+
+**Workflow de exploración:** `list_projects` → `get_graph_schema` → `search_graph` → `get_code_snippet`
+
+**Workflow de trazado:** `search_graph` (nombre exacto) → `trace_path` → `detect_changes`
+
+**Análisis de calidad:**
+- Código muerto: `max_degree=0`
+- Fan-out alto: `min_degree=10, direction="outbound"`
+- Fan-in alto: `min_degree=10, direction="inbound"`
+
+**`query_graph` con Cypher** para patrones que `search_graph` no cubre — techo de 100k filas, añadir siempre `LIMIT`.
+
+### Los 5 gotchas
+
+1. `search_graph(relationship="HTTP_CALLS")` filtra nodos por grado, no aristas reales — usar `query_graph` con Cypher para ver las aristas.
+2. `query_graph` tiene techo de 100k filas.
+3. `trace_path` necesita el nombre **exacto** — descúbrelo antes con `search_graph`.
+4. `direction="outbound"` pierde llamadas cross-service — ante duda usa `"both"`.
+5. `search_graph` pagina de 50 en 50 — comprueba `has_more` y usa `offset` antes de concluir que algo no existe.
+
+### Niveles de evidencia
+
+- **Scout (T1):** búsqueda rápida y positiva. Resultados provisionales — nunca afirmar ausencia, exhaustividad o código muerto con esto solo.
+- **Verify (T2, por defecto):** búsquedas dirigidas, snippets exactos para toda afirmación material, todas las páginas relevantes revisadas.
+- **Auditor (T3):** verificación completa de alcance acotado, paginación completa, ambas direcciones de llamada, limitaciones no resueltas declaradas explícitamente.
+- **Todos los niveles:** llamar `check_index_coverage` una vez con todas las rutas de evidencia antes de afirmar algo material.
+
+> **Cobertura limpia ≠ prueba de completitud.** Un resultado limpio de `check_index_coverage` significa "no hay hueco registrado", no "está probado que no falta nada". Si reporta cobertura parcial, saltada o desconocida, lee el rango real antes de responder.
+
+## 7. Troubleshooting
+
+| Síntoma | Causa | Solución |
+| --- | --- | --- |
+| `.mcp.json` no arranca el servidor | Backslashes en rutas Windows → JSON inválido | Usar forward slashes; validar con `node -e "JSON.parse(require('fs').readFileSync('.mcp.json','utf8'))"` |
+| Los god nodes de `GRAPH_REPORT.md` son `.ts`/`.vue`/etc. en perfil CODE/MIXTO | El `.graphifyignore` no se aplicó o el Bloque B está incompleto | Revisar Bloque B del `.graphifyignore`, reconstruir |
+| El corpus de graphify reporta menos ficheros que los `.md` de `.harness/` | `.harness/` sigue excluido (regresión al bug v3) | Revisar que el Bloque A no reintrodujo `.harness/` ni `.*` |
+| `node_modules`/`.nuxt` aparecen en el índice del MCP | Se indexó la raíz en vez de las carpetas de fuentes | `delete_project` y reindexar apuntando a las carpetas concretas |
+| Comunidades sin etiquetar en más del 40% | Falta `GEMINI_API_KEY` | Relanzar `--cluster-only` con la key configurada |
+| `No module named graphify` | Intérprete mal resuelto | Revisar `graphify-out/.graphify_python` |

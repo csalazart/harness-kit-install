@@ -218,24 +218,44 @@ updateActiveContext(taskName, status, resumen, todayStr);
 updateProgress(taskName, status);
 
 // ─────────────────────────────────────────────────────────
-// 6. Actualizar el grafo de conocimiento (Graphify), si está instalado
+// 6. Actualizar el grafo de CONOCIMIENTO — solo si cambió documentación
 // ─────────────────────────────────────────────────────────
+const KNOWLEDGE_PATHS = [
+  '.harness/context/', '.harness/rules/', '.harness/llm-wiki/',
+  '.harness/STATE.md', 'docs/', 'plan/', 'planes/', 'working-plan/',
+  'AGENTS.md', 'CLAUDE.md', 'README.md'
+];
+
 const graphifyOutDir = path.join('.', 'graphify-out');
 if (fs.existsSync(graphifyOutDir)) {
-  const isWin = process.platform === 'win32';
-  const updateScript = isWin
-    ? path.join('scripts', 'update-graph.ps1')
-    : path.join('scripts', 'update-graph.sh');
+  let knowledgeChanged = true;   // por defecto sí, si no podemos saberlo
+  try {
+    const changed = execSync('git diff --name-only HEAD', { encoding: 'utf8' })
+      .split('\n').filter(Boolean);
+    knowledgeChanged = changed.some(f =>
+      KNOWLEDGE_PATHS.some(p => f.startsWith(p) || f === p));
+  } catch (e) {
+    // sin git o repo sin commits — conservador: regenerar
+  }
 
-  if (fs.existsSync(updateScript)) {
-    console.log('🔄 Actualizando grafo de conocimiento (Graphify)...');
-    try {
-      const cmd = isWin
-        ? `powershell -ExecutionPolicy Bypass -File "${updateScript}"`
-        : `bash "${updateScript}"`;
-      execSync(cmd, { stdio: 'inherit' });
-    } catch (e) {
-      console.log('⚠️  No se pudo actualizar el grafo automáticamente. Ejecuta el script manualmente si es necesario.');
+  if (!knowledgeChanged) {
+    console.log('ℹ️  Sin cambios en documentación — grafo de conocimiento al día, no se regenera.');
+  } else {
+    const isWin = process.platform === 'win32';
+    const updateScript = isWin
+      ? path.join('scripts', 'update-graph.ps1')
+      : path.join('scripts', 'update-graph.sh');
+
+    if (fs.existsSync(updateScript)) {
+      console.log('🔄 Actualizando grafo de conocimiento (Graphify)...');
+      try {
+        const cmd = isWin
+          ? `powershell -ExecutionPolicy Bypass -File "${updateScript}"`
+          : `bash "${updateScript}"`;
+        execSync(cmd, { stdio: 'inherit' });
+      } catch (e) {
+        console.log('⚠️  No se pudo actualizar el grafo automáticamente. Ejecuta el script manualmente si es necesario.');
+      }
     }
   }
 }

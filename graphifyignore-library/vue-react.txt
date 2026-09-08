@@ -1,0 +1,4 @@
+# vue-react.txt — bundlers típicos de proyectos Vue/React
+
+vite.config.*
+webpack.config.*

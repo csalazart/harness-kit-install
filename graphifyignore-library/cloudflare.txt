@@ -1,0 +1,5 @@
+# cloudflare.txt — Cloudflare Workers
+
+.wrangler/
+wrangler.toml
+wrangler.jsonc

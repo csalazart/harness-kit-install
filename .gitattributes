@@ -1,0 +1,10 @@
+# Los scripts .sh se ejecutan vía shebang (#!/usr/bin/env bash) en Linux/Mac.
+# Un CRLF ahí rompe la resolución del intérprete (env busca literalmente
+# "bash\r", que no existe) — verificado en ejecución real. Forzar LF siempre,
+# sea cual sea la configuración de git/editor de quien commitee.
+*.sh text eol=lf
+*.sh.template text eol=lf
+
+# Los fragmentos de graphifyignore-library/ se parsean como patrones de
+# ignore (Python) — un \r final puede colarse en el patrón. LF siempre.
+graphifyignore-library/*.txt text eol=lf

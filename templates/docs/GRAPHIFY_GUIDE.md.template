@@ -1,8 +1,11 @@
 # Guía de Instalación y Uso de Graphify
 > **Última actualización:** {{DATE}}
-> 
-> 🧠 **Graphify** convierte tu código fuente en un grafo de conocimiento navegable de forma semántica.
-> Permite a las IAs realizar consultas precisas con cero tokens de reportes estáticos redundantes.
+>
+> 🧠 **Graphify** convierte la documentación y el conocimiento de este proyecto
+> (`.harness/`, `docs/`, `plan/`, y el cerebro OKF si está instalado) en un grafo
+> navegable de forma semántica. En Harness Kit v4, el **código fuente** lo cubre
+> `codebase-memory-mcp` (salvo en perfil DOC) — ver `docs/KNOWLEDGE_GRAPHS.md`
+> para el enrutamiento completo entre ambos grafos.
 
 ---
 

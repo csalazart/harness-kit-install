@@ -1,0 +1,8 @@
+# _common-build.txt — artefactos de build comunes a casi cualquier stack JS/TS
+
+dist/
+build/
+out/
+coverage/
+.nyc_output/
+*.tsbuildinfo

@@ -1,0 +1,5 @@
+# nextjs.txt — Next.js
+
+.next/
+next.config.*
+next-env.d.ts

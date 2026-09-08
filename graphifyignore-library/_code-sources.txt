@@ -1,0 +1,27 @@
+# _code-sources.txt — extensiones de código fuente por lenguaje
+# Se aplica SOLO en perfiles CODE y MIXTO-con-MCP (§4.2 del plan V4).
+# En perfil DOC se omite: sin MCP que tome el relevo, el código lo
+# cubre el mismo grafo de conocimiento.
+#
+# El agente instalador debe quedarse solo con las extensiones de los
+# lenguajes que el proyecto usa realmente — no copiar el fragmento entero.
+
+*.ts
+*.tsx
+*.js
+*.jsx
+*.mjs
+*.cjs
+*.vue
+*.py
+*.sol
+*.rs
+*.go
+*.php
+*.java
+*.c
+*.cpp
+*.h
+*.hpp
+*.cs
+*.rb

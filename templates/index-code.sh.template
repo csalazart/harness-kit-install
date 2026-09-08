@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# index-code.sh — Reindexado del grafo de CÓDIGO (codebase-memory-mcp)
+# Generado por harness-kit · Proyecto: {{PROJECT_NAME}}
+#
+# Solo aplica a perfiles CODE y MIXTO-con-MCP (ver .harness/PROFILE.md).
+# Usa el modo CLI one-shot de codebase-memory-mcp — nunca arranca el daemon,
+# apto para scripts y hooks. Usa flags, nunca JSON crudo (deprecado).
+#
+# USO: ./scripts/index-code.sh
+
+set -euo pipefail
+
+if ! command -v codebase-memory-mcp &>/dev/null; then
+  echo "codebase-memory-mcp no está en el PATH. Ver docs/KNOWLEDGE_GRAPHS.md." >&2
+  exit 1
+fi
+
+echo "Detectando cambios desde el último índice..."
+codebase-memory-mcp cli detect_changes
+
+echo "Reindexando (modo fast)..."
+codebase-memory-mcp cli index_repository --repo-path . --mode fast
+
+echo "Estado del índice:"
+codebase-memory-mcp cli index_status

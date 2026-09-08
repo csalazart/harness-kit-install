@@ -1,0 +1,123 @@
+# ─────────────────────────────────────────────────────────────
+# .graphifyignore — Harness Kit v4 · DOMINIO: CONOCIMIENTO
+#
+# Graphify indexa la CAPA DE CONOCIMIENTO del proyecto:
+# documentación, memoria del harness, reglas, planes y decisiones.
+# El CÓDIGO lo cubre codebase-memory-mcp (ver .mcp.json y
+# .harness/PROFILE.md), salvo en perfil DOC.
+#
+# ┌─ ESTRUCTURA DE ESTE FICHERO ──────────────────────────────┐
+# │ BLOQUE A — núcleo invariante: NO EDITAR                    │
+# │ BLOQUE B — fragmentos del stack: regenerables              │
+# │ BLOQUE C — reglas propias del proyecto: edítalas aquí      │
+# └────────────────────────────────────────────────────────────┘
+#
+# ⚠️ NUNCA reintroducir `.*` ni `.harness/`: la memoria del harness
+#    y el cerebro OKF son el contenido de este grafo, no ruido.
+# ─────────────────────────────────────────────────────────────
+
+# ═══ BLOQUE A — NÚCLEO INVARIANTE · NO EDITAR ═══════════════
+
+# A.1 SECRETOS — crítico, no relajar bajo ninguna circunstancia
+.env
+.env.*
+.dev.vars
+*.pem
+*.key
+*.pub
+*.crt
+
+# A.2 SALIDA DEL PROPIO GRAFO
+graphify-out/
+.cache/
+
+# A.3 MEMORIA VOLÁTIL DEL HARNESS
+#     La reescriben harness-start/finish en cada sesión: indexarla
+#     haría envejecer el grafo a cada sesión. El protocolo FAST LOAD
+#     de AGENTS.md ya la lee siempre, no necesita grafo.
+.harness/context/activeContext.md
+.harness/context/progress.md
+.harness/context/plans-index.md
+.harness/logs/
+.harness/workspaces/
+.harness/llm-wiki/_templates/
+.harness/llm-wiki/raw/
+
+# A.4 CONFIGURACIÓN DE AGENTES E IDE (no es conocimiento del proyecto)
+.claude/
+.cursor/
+.gemini/
+.agents/
+.github/
+.vscode/
+.idea/
+.git/
+
+# A.5 FONTANERÍA DEL HARNESS
+scripts/harness-*
+scripts/query-graph.*
+scripts/update-graph.*
+scripts/index-code.*
+init.js
+init.cjs
+init.sh
+# El propio skill de graphify (SKILL.md + references/) es documentación
+# genérica idéntica en cualquier instalación del kit — no es conocimiento
+# del proyecto. Indexarlo contamina los god nodes con "Pipeline de graphify"
+# en vez de las abstracciones reales del proyecto (verificado en producción,
+# ver simulaciones/). load-memory/update-memory sí se indexan: son cortos
+# y explican el protocolo de ESTE proyecto, no documentación de una
+# herramienta de terceros.
+.harness/skills/graphify/
+
+# A.6 ÁREAS TEMPORALES DE MIGRACIÓN (ver 06_migrate.md y 07_upgrade_v3_to_v4.md, FASE D)
+migracion/
+migracion-v4/
+
+# A.7 BINARIOS, MULTIMEDIA Y OFIMÁTICA
+*.png
+*.jpg
+*.jpeg
+*.svg
+*.webp
+*.gif
+*.ico
+*.bmp
+*.tiff
+*.pdf
+*.docx
+*.odt
+*.woff
+*.woff2
+*.ttf
+*.eot
+*.otf
+*.mp4
+*.mp3
+*.wav
+*.avi
+*.mov
+*.zip
+*.gz
+*.tar
+*.7z
+*.rar
+*.iso
+
+# A.8 LOGS Y TEMPORALES
+*.log
+*.tmp
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ═══ BLOQUE B — FRAGMENTOS DEL STACK ════════════════════════
+# Compuesto en la instalación desde graphifyignore-library/.
+# Regenerable: si cambia el stack, se recompone este bloque.
+
+# ═══ BLOQUE C — REGLAS PROPIAS DEL PROYECTO ═════════════════
+# Añade aquí lo específico de este proyecto. Cada regla, con el
+# motivo en un comentario — quien la lea dentro de seis meses
+# debe poder saber por qué está.

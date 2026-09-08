@@ -1,0 +1,4 @@
+# rust.txt — Rust
+
+target/
+Cargo.lock

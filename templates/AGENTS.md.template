@@ -48,13 +48,85 @@ Mostrar resumen compacto tras leerlos:
 Contexto cargado: [proyecto] | Rama: [rama] | Próximo: [próximo paso] | Bloqueantes: [ninguno/lista]
 ```
 
-**Paso 0.5 — Búsqueda de código (cascada Graphify → manual):**
-*   Para entender estructura del código, relaciones entre módulos o localizar funciones/clases, ejecutar SIEMPRE primero el script de consulta (no comprobar `graphify-out/` a mano — el script ya lo hace internamente y falla rápido sin coste si no existe):
-    - Windows: `.\scripts\query-graph.ps1 "<pregunta>"`
-    - Mac/Linux: `./scripts/query-graph.sh "<pregunta>"`
-*   Si el comando devuelve `exit code ≠ 0`, o la salida está vacía / es el aviso de "no se encontró la configuración de Graphify en graphify-out/" → hacer fallback inmediato a Grep/Glob/Explore/Bash find. No reintentar el script, no preguntar al usuario, no comprobar el directorio manualmente antes.
-*   Si el script responde con `exit code 0` pero indica "sin resultados" para una consulta que sí tiene sentido, tratarlo como respuesta real (no como fallo) — no activar el fallback en ese caso.
-*   **Excepción con preguntas de "quién importa/usa X"**: Graphify solo resuelve alias de import (`@/`, `@@/`, `~/`, etc.) leyendo `tsconfig.json` vía `extends` — no vía `references`. Si esa cadena se rompe (p. ej. en proyectos Nuxt donde `.nuxt/` no está compilado localmente), una respuesta de "no hay relación" puede ser un falso negativo del indexador, no un hecho real. Ante dudas sobre uso/relación de un fichero vía alias, confirmar con `Grep` sobre el patrón de alias antes de concluir que no se usa en ningún sitio.
+**Paso 0.5 — Búsqueda: enrutamiento por dominio:**
+
+Este proyecto tiene grafos con dominios disjuntos. Elegir mal devuelve
+respuestas vacías o engañosas. El perfil del proyecto está en
+`.harness/PROFILE.md`; el detalle completo en `docs/KNOWLEDGE_GRAPHS.md`.
+
+| Dominio | Herramienta | Cobertura |
+| --- | --- | --- |
+| **Código** | MCP `codebase-memory` | fuentes del proyecto |
+| **Conocimiento** | scripts `query-graph.*` (graphify) | `.harness/` `docs/` `plan/` |
+
+*   **Preguntas de CÓDIGO → herramientas MCP.** Nunca los scripts de graphify:
+    el código no está en ese grafo.
+
+    | Pregunta | Llamada |
+    | --- | --- |
+    | ¿Quién llama a X? | `trace_path(function_name="X", direction="inbound")` |
+    | ¿Qué llama X? | `trace_path(direction="outbound")` |
+    | Contexto completo de llamadas | `trace_path(direction="both")` |
+    | Localizar por nombre | `search_graph(name_pattern=".*X.*")` |
+    | Código muerto | `search_graph(max_degree=0, exclude_entry_points=true)` |
+    | Impacto de mis cambios | `detect_changes()` |
+    | Ver el código exacto | `get_code_snippet(qualified_name="…")` |
+    | Estructura del proyecto | `get_architecture()` |
+    | Búsqueda textual en código | `search_code()` — preferir sobre `Grep` |
+
+    **Cuatro reglas de uso** (el resto, en `docs/KNOWLEDGE_GRAPHS.md`):
+    1. `trace_path` exige el nombre **exacto** — descúbrelo antes con `search_graph`.
+    2. `direction="outbound"` se pierde llamadas cross-service; ante duda usa `"both"`.
+    3. Los resultados paginan de 50 en 50 — comprueba `has_more` y usa `offset`
+       antes de concluir que algo no existe.
+    4. Antes de afirmar **ausencia** («no se usa», «no existe», «es código muerto»)
+       o exhaustividad, llama a `check_index_coverage` con las rutas implicadas.
+       Un resultado limpio significa *«no hay hueco registrado»*, **no** prueba de
+       completitud: si reporta cobertura parcial, saltada o desconocida, lee el
+       rango real antes de responder.
+
+    > Si el perfil es **DOC** no hay MCP: el código está en el grafo de
+    > graphify (o se lee directamente — son pocos ficheros). Consultar
+    > `.harness/PROFILE.md` en caso de duda.
+
+*   **Cuándo SÍ usar `Grep`/`Glob`/`Read` sin pasar por el grafo:** texto plano,
+    configuración, ficheros que no son código, y **siempre `Read` un fichero
+    antes de editarlo**. El grafo localiza; no sustituye a leer lo que vas a tocar.
+
+*   **Preguntas de CONOCIMIENTO** («¿por qué se decidió X?», «¿en qué estado
+    está el proyecto?», «¿qué exige la regla de Y?», «¿qué plan hay para Z?»):
+    ejecutar el script de consulta — elegir por la HERRAMIENTA que vas a
+    invocar, no por el sistema operativo:
+    - Herramienta **PowerShell** → `.\scripts\query-graph.ps1 "<pregunta>"`
+    - Herramienta **Bash** → `./scripts/query-graph.sh "<pregunta>"`
+    Nunca el `.ps1` vía Bash (no parsea `param(...)`) ni el `.sh` vía PowerShell.
+    Si devuelve `exit code ≠ 0` o el aviso de "no se encontró la configuración
+    de Graphify" → fallback inmediato a Grep/Glob/Explore. No reintentar.
+    Si devuelve `exit code 0` con "sin resultados", es una respuesta real:
+    no activar el fallback.
+
+*   **Preguntas MIXTAS** («¿está implementado este plan?», «¿la doc describe
+    el código real?», «¿se cumple esta regla?»): usar la skill `doc-code-audit`
+    — extrae la afirmación del grafo de conocimiento y la verifica con
+    `search_graph`. Citar ambas fuentes: `doc:línea` y símbolo real del código.
+
+> **Nota histórica (v3):** graphify daba falsos negativos en "quién importa X"
+> cuando el proyecto usa alias (`@/`, `~/`) y la cadena de `tsconfig.json` se
+> rompe (típico en Nuxt sin `.nuxt/` compilado). En perfiles CODE y MIXTO esto
+> ya no aplica: el MCP resuelve imports por análisis semántico. En perfil DOC,
+> si el grafo de graphify cubre código, la advertencia sigue vigente —
+> confirmar con `Grep` antes de concluir que algo no se usa.
+
+**Mantenimiento de los grafos:**
+*   Tras modificar **código**: nada manual (perfiles CODE/MIXTO) — el MCP
+    detecta cambios. Para forzar reindexado: `.\scripts\index-code.ps1` /
+    `./scripts/index-code.sh`.
+*   Tras modificar **documentación**, `.harness/context/`, `.harness/rules/`,
+    `.harness/llm-wiki/`, `docs/`, `plan/`: ejecutar `update-graph`.
+    **Cuesta tokens** (extracción semántica) — agrupa las ediciones.
+*   **Nunca** reintroducir código como indexable en `.graphifyignore` en
+    perfiles CODE/MIXTO: duplica el trabajo del MCP con peor precisión y
+    con un coste de tokens que el MCP no tiene.
 
 **Paso 1 — Verificar el entorno (Solo si vas a desarrollar o modificar código):**
 > ℹ️ **Si la sesión es de solo-lectura, Q&A, consultas conceptuales o gestión del backlog (STATE.md), SALTA este paso.**
@@ -104,7 +176,11 @@ node init.js
 *   **Escribir en disco, no en chat**: Decisiones, reportes y hallazgos van en `session.md` de la tarea.
 *   **Verificación real obligatoria**: Ejecutar tests y comandos reales, no asumir que funciona.
 *   **Commits antes de cerrar**: Toda sesión termina con commit semántico y `node init.js` en verde.
-*   **Jerarquía de búsqueda (de más barato a más caro)**: Graphify (Paso 0.5) → Glob (nombres de fichero) → Grep (símbolos/contenido) → subagente Explore (solo si se prevén 3+ rondas de búsqueda o exploración muy abierta). No saltar directo al subagente si una búsqueda dirigida basta.
+*   **Jerarquía de búsqueda**: **MCP `codebase-memory`** (código) /
+    **graphify** (conocimiento) → Glob (nombres de fichero) → Grep
+    (símbolos/contenido) → subagente Explore (solo si se prevén 3+ rondas).
+    Las dos primeras son alternativas por dominio, no pasos consecutivos.
+    No saltar al subagente si una búsqueda dirigida basta.
 
 ---
 
@@ -117,7 +193,7 @@ node scripts/harness-start.js --task nombre_tarea
 Crea automáticamente `.harness/workspaces/nombre_tarea/` con `orden.md` (objetivos del orquestador) y `session.md` (diario del especialista).
 
 ### Paso B — El Orquestador escribe los objetivos
-Antes de lanzar al especialista, escribe en `orden.md` el objetivo concreto, los criterios de aceptación verificables (`- [ ]`) y archivos clave.
+Antes de lanzar al especialista, escribe en `orden.md` el objetivo concreto, los criterios de aceptación verificables (`- [ ]`) y archivos clave. Si la tarea es de complejidad Media o superior, rellena también "Fuera de alcance" — evita reabrir el debate de scope a mitad de sesión.
 
 ### Paso C — El Especialista ejecuta la tarea
 El especialista lee `orden.md`, programa la lógica, añade pruebas, documenta cada paso en `session.md` y al terminar completa la sección "Reporte Final" de `session.md`.

@@ -144,7 +144,38 @@ Tras cada fichero creado, confirma en el chat: `✅ {fichero} — {1 línea de q
 2. Muestra el árbol final de `.harness/` y ficheros raíz
 3. Verifica que STATE.md tiene al menos una tarea pendiente con `[ ]`
 4. Elimina los ficheros viejos del plan (solo tras confirmación tuya)
-5. Haz commit: `"chore: migrate harness to lean workspace architecture"`
+
+5. **Cierre del área de migración**
+
+   `migracion/` es un área de trabajo temporal: su `backup/` recolectó la
+   información del sistema antiguo para volcarla en la estructura nueva. Si la
+   migración se ha verificado, esa información ya vive en su destino definitivo
+   y la carpeta es un duplicado.
+
+   Antes de proponer nada, **verifica que el volcado está completo**:
+
+   - `node init.js` termina en `[HARNESS OK]` (paso 1)
+   - `.harness/STATE.md` contiene las tareas de `backup/02_TAREAS_PENDIENTES.md`
+     y `backup/03_TAREAS_COMPLETADAS.md`
+   - `.harness/context/` refleja lo que había en `backup/01_ESTADO_PROYECTO.md`
+   - `.harness/rules/` recoge lo de `backup/04_MEMORIA_Y_REGLAS.md`
+   - Ningún fichero de `backup/files/` contiene información que no esté ya
+     representada en la estructura nueva
+
+   Si algo no cuadra, **detente y repórtalo** — no propongas eliminar nada.
+
+   Si todo cuadra, muestra al usuario el resumen (nº de ficheros que ocupa
+   `migracion/`, qué se verificó) y ofrécele tres opciones:
+
+   a) **Archivar fuera del repo** (recomendado): comprimir `migracion/` a
+      `../<proyecto>-migracion-<fecha>.zip` y eliminar la carpeta.
+   b) **Eliminar** `migracion/` directamente.
+   c) **Conservarla** — en tal caso, añade `migracion/` al `.gitignore` del
+      proyecto para que no siga versionándose.
+
+   **Espera su decisión. Nunca elimines sin confirmación explícita.**
+
+6. Haz commit: `"chore: migrate harness to lean workspace architecture"`
 
 ---
 

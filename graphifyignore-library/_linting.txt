@@ -1,0 +1,6 @@
+# _linting.txt — configuración de linters/formatters
+
+.eslintrc*
+.prettierrc*
+.editorconfig
+eslint.config.*

@@ -24,3 +24,12 @@
 - Backlog y bloqueos → `.harness/STATE.md` (fuente de verdad única, no se duplica aquí)
 - Si el proyecto tiene **harness-okf** instalado: conocimiento de DOMINIO → `.harness/llm-wiki/index.md`
 - Frontera: **context/ = dónde vamos (sesión) · llm-wiki/ = qué sabemos (dominio)**
+
+## Relación con los grafos (Harness Kit v4)
+
+Este proyecto tiene dos grafos con dominios disjuntos: `codebase-memory-mcp` (código)
+y graphify (conocimiento — incluye `.harness/` y este propio `context/`, salvo los
+ficheros volátiles listados en `.graphifyignore`). `context/` es memoria de **sesión**,
+no sustituye a ninguno de los dos grafos ni al backlog de `STATE.md`.
+
+Enrutamiento completo, perfiles y troubleshooting → `docs/KNOWLEDGE_GRAPHS.md`.

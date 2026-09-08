@@ -46,6 +46,7 @@ Esto crea automáticamente:
 ### Paso B — El Orquestador rellena orden.md
 Antes de lanzar el sub-agente, escribe en `orden.md`:
 - Objetivo concreto de la tarea
+- Fuera de alcance (opcional — solo tareas de complejidad Media o superior, ver §2): qué NO va a hacer esta tarea aunque esté relacionado
 - Criterios de aceptación verificables (`- [ ] criterio`)
 - Contexto relevante: decisiones tomadas, restricciones, ficheros clave
 
