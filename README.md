@@ -1,6 +1,6 @@
 # Harness Engineering Kit
 > Reusable kit to apply the Engineering Harness methodology to any software project.
-> Version: 1.4.0 | Updated: 2026-09-06
+> Version: 1.4.0 | Updated: 2026-09-06 | [Changelog](CHANGELOG.md)
 
 ---
 
@@ -45,6 +45,8 @@ model above).
 harness-kit-install/
 ├── README.md                              ← This file
 ├── README_ES.md                           ← Spanish version
+├── CHANGELOG.md                           ← Release history
+├── CHANGELOG_ES.md                        ← Spanish version
 ├── QUICKSTART.md                          ← Quick start in 5 steps
 ├── QUICKSTART_ES.md                       ← Spanish version
 ├── INSTALL.md                             ← Step-by-step install guide (Spanish)

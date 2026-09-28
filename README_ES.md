@@ -1,6 +1,6 @@
 # Harness Engineering Kit
 > Kit reutilizable para aplicar la metodología de Arnés de Ingeniería a cualquier proyecto de software.
-> Versión: 1.4.0 | Actualizado: 2026-09-06
+> Versión: 1.4.0 | Actualizado: 2026-09-06 | [Historial de cambios](CHANGELOG_ES.md)
 
 ---
 
@@ -45,6 +45,8 @@ graphify igual que el resto de `.harness/` (ver el modelo de grafo dual arriba).
 harness-kit-install/
 ├── README.md                              ← Versión en inglés
 ├── README_ES.md                           ← Este fichero
+├── CHANGELOG.md                           ← Historial de cambios (inglés)
+├── CHANGELOG_ES.md                        ← Historial de cambios (español)
 ├── QUICKSTART.md                          ← Arranque rápido en 5 pasos (inglés)
 ├── QUICKSTART_ES.md                       ← Arranque rápido en 5 pasos (español)
 ├── INSTALL.md                             ← Guía de instalación paso a paso
