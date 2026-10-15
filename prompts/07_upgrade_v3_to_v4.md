@@ -41,10 +41,10 @@ existía. Nunca elimines nada sin backup previo y confirmación explícita.
 | `.harness/skills/` (skills propios del proyecto, p.ej. de harness-okf: `okf-ingest`, `okf-lint`, `okf-query`) | No | Se preserva TAL CUAL — es dato/capacidad del proyecto, no fontanería del kit v4 |
 | `.harness/scripts/` (scripts propios del proyecto o de harness-okf, p.ej. `okf-check.*`, `okf-link-skills.*`) | No | Se preserva TAL CUAL — **no confundir con `scripts/` en la raíz** (esa sí es fontanería del kit, ver más abajo). Si tienes dudas sobre si un fichero de `.harness/scripts/` es del kit o del proyecto, pregunta antes de tocarlo |
 | Documentos de decisión previos del proyecto (`docs/*.md`, `working-plan/*.md`, `plan/*.md`, `planes/*.md`) | No | **Se leen, no solo se cuentan** — pueden contener una decisión ya tomada sobre perfil/MCP que el paso de perfilado (FASE B) debe respetar o contrastar, no ignorar (ver FASE A punto 4) |
-| `AGENTS.md` / `CLAUDE.md` | Sí, parcialmente | **Backup primero** (van a editarse por fusión, mismo riesgo que justifica el backup de STATE/context/rules), luego **fusionar**: el Paso 0.5 y la jerarquía de búsqueda se actualizan al enrutamiento por dominio; cualquier sección propia del proyecto (ajena al kit) se conserva íntegra. De paso, verifica que no queden placeholders `{{...}}` sin resolver de la instalación v3 original — repórtalo si los hay, no lo arregles sin preguntar |
+| `AGENTS.md` / `CLAUDE.md` | Sí, parcialmente | **Backup primero** (van a editarse por fusión, mismo riesgo que justifica el backup de STATE/context/rules), luego **fusionar**: el Paso 0.5 y la jerarquía de búsqueda se actualizan al enrutamiento por dominio; cualquier sección propia del proyecto (ajena al kit) se conserva íntegra. La fusión la hace `node scripts/harness-merge-instructions.js --sync --adopt` (envuelve en marcas `<!-- harness-kit:ID -->` las secciones v3 existentes, respeta lo ajeno y deja copia en `.harness/backups/`; ejecútalo primero con `--dry-run` y enseña el resultado). De paso, verifica que no queden placeholders `{{...}}` sin resolver de la instalación v3 original — repórtalo si los hay, no lo arregles sin preguntar |
 | `.graphifyignore` (v3) | Sí, por completo | **Se sustituye** por la composición en 3 capas de v4 (Bloque A/B/C). El v3 casi seguro excluye `.harness/` (bug P1) — no se fusiona, se recompone desde cero |
 | `graphify-out/` (si existe) | Se reconstruye | **No se preserva.** Se generó con un filtro con bug; regla ya establecida del kit — "ante conflicto, regenerar, no mergear" |
-| `.mcp.json` (si existe, de otro uso previo) | Se revisa | Se **fusiona** con la entrada `codebase-memory` si el perfil la requiere; nunca se sobrescribe |
+| `.mcp.json` (si existe, de otro uso previo) | Se revisa | Se **fusiona** con la entrada del motor de código elegido (`codebase-memory` o `codegraph`) si el perfil la requiere; nunca se sobrescribe |
 | `.harness/PROFILE.md` | Nuevo en v4 | No existía en v3 por definición — se crea con el perfilado calculado fresco |
 | `init.js` / `init.sh` / `scripts/harness-*` / `scripts/query-graph.*` / `scripts/update-graph.*` | Sí | Se sustituyen por las versiones v4 — sin backup, son fontanería del kit, no datos del proyecto. **Comprueba `package.json` antes de decidir la extensión**: si tiene `"type": "module"`, los scripts de Node van en `.cjs`, no `.js` (un `.js` con `require()` en un paquete ESM rompe al ejecutarse) — ver FASE A punto 5 |
 | `.claude/skills/graphify/`, `.agents/skills/graphify/` (si ya instalado desde v3) | Puede cambiar | Re-copia desde `harness-kit-install/templates/skills/graphify/` igual que el resto de fontanería — no lo des por "ya instalado, no tocar" si el contenido del skill cambió entre versiones del kit |
@@ -224,9 +224,10 @@ PLAN DE ACTUALIZACIÓN v3 → v4
      como si fuera la primera vez que el proyecto se plantea la pregunta.
    - `.graphifyignore` nuevo, compuesto en 3 capas.
    - `.harness/PROFILE.md`: crear con el perfilado de este paso (incluye
-     `Kit-Version: 1.4.1` — ver `templates/PROFILE.md.template`).
+     `Kit-Version: 1.4.2` — ver `templates/PROFILE.md.template`).
    - `/graphify` para reconstruir `graphify-out/` desde cero.
-   - Si el perfil lo requiere: `codebase-memory-mcp` (§3.5.2 de `01_init.md`).
+   - Si el perfil lo requiere: el motor de código elegido — `codebase-memory` o `codegraph`,
+     decidido como en la Fase B.6.b de `01_init.md` (§3.5.2 / §3.5.2-B).
 
 7. [MIGRAR LOS DATOS DEL BACKUP] Aquí es donde vuelve la información
    respaldada en el paso 2-3 — pero **con matiz honesto, no automático**:
@@ -256,7 +257,8 @@ PLAN DE ACTUALIZACIÓN v3 → v4
    - `AGENTS.md`: aplicar el nuevo Paso 0.5 (enrutamiento por dominio) y la
      sección de Mantenimiento; conservar cualquier sección propia del proyecto
      detectada en la Fase A
-   - `.mcp.json` (si existía): añadir la entrada `codebase-memory` conservando
+   - `.mcp.json` (si existía): añadir la entrada del motor elegido (`codebase-memory` o
+     `codegraph`) conservando
      lo que ya hubiera
 
 10. [CREAR — nuevo en v4]
@@ -309,8 +311,8 @@ Reglas durante la ejecución:
    - `graphify-out/graph.json`: reconstruido, con god nodes documentales
      (puerta de calidad §3.5.1.d de `01_init.md`)
    - `.harness/PROFILE.md`: perfil declarado y decisión sobre el MCP
-3. Si el perfil requiere MCP: verifica con `/mcp` que `codebase-memory`
-   aparece, y aplica la puerta de calidad de §3.5.2.f (ficheros indexados del
+3. Si el perfil requiere MCP: verifica con `/mcp` que el servidor del motor elegido
+   (`codebase-memory` o `codegraph`) aparece, y aplica la puerta de calidad de §3.5.2.f (ficheros indexados del
    orden esperado, sin `node_modules` colado).
 
 4. **Cierre del área de migración** (mismo patrón que `06_migrate.md` FASE D,

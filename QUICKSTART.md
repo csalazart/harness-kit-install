@@ -48,8 +48,8 @@ graphify-out/                      ← knowledge graph (docs, .harness/, plan/) 
 ```
 
 > **Dual knowledge graph (v4):** `graphify` (knowledge) always gets installed;
-> `codebase-memory-mcp` (code) only if the project's profile is CODE, or MIXTO
-> and you opt in. See `docs/KNOWLEDGE_GRAPHS.md` once installed for the full
+> a code-graph engine (`codebase-memory-mcp` or `codegraph`, your choice or `auto`) only if the
+> project's profile is CODE, or MIXTO and you opt in. See `docs/KNOWLEDGE_GRAPHS.md` once installed for the full
 > routing table between the two.
 
 ---

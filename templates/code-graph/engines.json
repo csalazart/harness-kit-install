@@ -1,0 +1,24 @@
+{
+  "_comment": "Motores de grafo de codigo del harness-kit. El usuario elige uno (o \"auto\": decide la IA) y queda en .harness/PROFILE.md campo \"Motor de codigo\". Solo uno a la vez.",
+  "default": "codebase-memory",
+  "engines": {
+    "codebase-memory": {
+      "label": "MCP `codebase-memory`",
+      "mcpKey": "codebase-memory",
+      "binary": "codebase-memory-mcp",
+      "mcpFragment": "code-graph/codebase-memory/mcp.json"
+    },
+    "codegraph": {
+      "label": "MCP `codegraph`",
+      "mcpKey": "codegraph",
+      "binary": "codegraph",
+      "mcpFragment": "code-graph/codegraph/mcp.json"
+    },
+    "none": {
+      "label": "(sin grafo de código)",
+      "mcpKey": null,
+      "binary": null,
+      "mcpFragment": null
+    }
+  }
+}

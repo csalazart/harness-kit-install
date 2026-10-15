@@ -4,7 +4,7 @@
 > sin él no se puede distinguir "el MCP no está porque el perfil es DOC" de
 > "el MCP no está porque la instalación falló".
 
-- **Kit-Version:** 1.4.1
+- **Kit-Version:** 1.4.2
   (versión del harness-kit instalada — la lee cualquier futuro prompt de
   actualización para saber de qué versión parte, en vez de adivinarlo por
   ausencia/presencia de ficheros)
@@ -19,19 +19,26 @@
 - **¿Es un proyecto de infraestructura/configuración (docker-compose, IaC, scripts de sistema) más que de aplicación?** {{sí/no}}
   - Si sí: tratado como perfil DOC por defecto (no hay símbolos de aplicación que un LSP resuelva), confirmado con el usuario.
 
-## Decisión sobre `codebase-memory-mcp`
+## Decisión sobre el motor de código
 
-- **¿Se instala el MCP?** {{sí/no/opcional-no-instalado}}
+- **Motor de código:** {{codebase-memory|codegraph|none}}
+  (qué grafo de código usa el proyecto — solo uno a la vez. `none` en perfil DOC o si el usuario
+  no quiso instalarlo. Lo leen `init.js`/`init.sh`, `index-code.*` y `harness-merge-instructions.js`;
+  sin este campo se asume `codebase-memory`, que era el único motor antes de 1.4.2.)
+- **Selección del motor:** {{usuario|auto}}
+  (`auto` = lo decidió la IA con los criterios de `prompts/01_init.md` Fase B punto 6.b)
+- **Motivo de la selección:** {{ej. "auto: TypeScript con alias, ambos cubren el lenguaje; codegraph por coste de contexto (1 herramienta)" | "usuario: ya usa codebase-memory en otros repos"}}
+- **¿Se instala el motor (MCP)?** {{sí/no/opcional-no-instalado}}
 - **Motivo:** {{ej. "perfil CODE, >100 ficheros" | "perfil DOC, código insuficiente para amortizar el binario" | "perfil MIXTO, el usuario decidió no instalarlo por coste de contexto"}}
-- **`--tool-profile` usado (si se instaló):** {{ninguno|analysis|scout}}
+- **`--tool-profile` usado (solo codebase-memory, si se instaló):** {{ninguno|analysis|scout}}
 - **Delta de contexto medido (`/context` antes/después):** {{tokens}}
   - Medido el: {{fecha}}
   - Si el perfil es MIXTO y el delta resultó desproporcionado, se anota aquí la decisión tomada (mantener / desinstalar).
 
-## Verificación de cobertura de lenguaje (solo si se instaló el MCP)
+## Verificación de cobertura de lenguaje (solo si se instaló un motor de código)
 
 - **Símbolo real de prueba usado:** `{{símbolo}}`
-- **`search_graph` lo encontró:** {{sí/no}}
+- **La consulta de prueba lo encontró (`search_graph` / `codegraph_explore`):** {{sí/no}}
 - **Lenguajes con cobertura no garantizada en este proyecto (Solidity, Vue SFC, imports remotos de Deno, etc.):** {{lista o "ninguno detectado"}}
   - Si algún lenguaje falla: anotar aquí y considerar devolverlo al grafo de graphify (ver `docs/KNOWLEDGE_GRAPHS.md`).
 

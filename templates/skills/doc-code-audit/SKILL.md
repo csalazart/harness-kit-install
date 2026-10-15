@@ -1,7 +1,8 @@
 # Skill: doc-code-audit
 
 > Carea la documentación del proyecto (grafo de conocimiento, graphify) contra el código
-> real (grafo de código, `codebase-memory-mcp`). Solo existe porque el proyecto tiene los
+> real (grafo de código: `codebase-memory-mcp` o `codegraph`, según el campo `Motor de código` de
+> `.harness/PROFILE.md`). Solo existe porque el proyecto tiene los
 > dos grafos — es la capacidad nueva del modelo dual (ver `docs/KNOWLEDGE_GRAPHS.md`).
 
 ## Disponibilidad por perfil
@@ -28,8 +29,11 @@ Lee `.harness/PROFILE.md` primero.
    Recoger, por cada afirmación: el identificador mencionado y su `fichero:línea` en la documentación.
 
 3. **Verificar cada identificador contra el grafo de código:**
-   - `search_graph(<identificador>)` — localizarlo.
-   - `get_code_snippet(<identificador>)` — solo si hay duda sobre la firma exacta.
+   - Motor `codebase-memory`: `search_graph(<identificador>)` — localizarlo;
+     `get_code_snippet(<identificador>)` — solo si hay duda sobre la firma exacta.
+   - Motor `codegraph`: `codegraph_explore(<identificador>)` (o CLI `codegraph query` /
+     `codegraph node`) — localizarlo y ver su código; antes de consultar por CLI tras editar,
+     `codegraph sync -q .`.
 
 4. **Clasificar cada afirmación:**
    - ✅ **CONFIRMADA** — existe, donde dice la doc, con la firma descrita.
@@ -44,7 +48,7 @@ Lee `.harness/PROFILE.md` primero.
 
 ## Requisitos de rigor (heredados de la disciplina de veracidad del kit)
 
-- **Nunca** marcar CONFIRMADA sin un resultado real de `search_graph`.
+- **Nunca** marcar CONFIRMADA sin un resultado real de la consulta al grafo de código (`search_graph` / `codegraph_explore`).
 - Citar siempre `fichero:línea` de la doc **y** la ubicación real del código.
 - El informe va primero. Las correcciones a la documentación, solo bajo aprobación explícita del usuario — esta skill nunca edita documentación por su cuenta.
 
@@ -61,8 +65,9 @@ del grafo — no asumas que una traducción literal basta.
 
 ## Niveles de evidencia
 
-Aplica el mismo principio que `codebase-memory-mcp` (ver `docs/KNOWLEDGE_GRAPHS.md` §6):
-**cobertura limpia ≠ prueba de completitud.** Un `check_index_coverage` limpio en las
-rutas auditadas significa que no hay hueco registrado, no que el careo es exhaustivo.
+Aplica el mismo principio con cualquier motor (ver `docs/KNOWLEDGE_GRAPHS.md` §6 y §6-bis):
+**cobertura limpia ≠ prueba de completitud.** Un `check_index_coverage` limpio (codebase-memory)
+en las rutas auditadas significa que no hay hueco registrado, no que el careo es exhaustivo;
+con codegraph, un índice sin sincronizar (`codegraph status`) tampoco prueba ausencia.
 Si el índice reporta cobertura parcial o desconocida en el alcance auditado, decláralo
 en el informe como limitación, no lo omitas.

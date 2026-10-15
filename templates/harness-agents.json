@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "_comment": "Matriz de agentes IA del harness-kit. La leen harness-link-skills.js y harness-merge-instructions.js (viven junto a este fichero). Rutas relativas a la raiz del proyecto. 'skills': carpeta nativa donde el agente descubre skills (null = usa .agents/skills). 'instructions': fichero propio del agente que debe apuntar a AGENTS.md (null = el agente ya lee AGENTS.md de forma nativa). 'template': plantilla de templates/ para ese fichero (por defecto AGENT_POINTER.md.template). 'always': se incluye siempre aunque no se detecte.",
+  "agents": [
+    {
+      "id": "claude-code",
+      "name": "Claude Code",
+      "detect": [".claude", "CLAUDE.md"],
+      "skills": ".claude/skills",
+      "instructions": "CLAUDE.md",
+      "template": "CLAUDE.md.template",
+      "notes": "Lee CLAUDE.md, no AGENTS.md; CLAUDE.md importa @AGENTS.md."
+    },
+    {
+      "id": "gemini-cli",
+      "name": "Gemini CLI",
+      "detect": [".gemini", "GEMINI.md"],
+      "skills": ".gemini/skills",
+      "instructions": "GEMINI.md",
+      "template": "GEMINI.md.template",
+      "notes": "Lee GEMINI.md; GEMINI.md importa @AGENTS.md."
+    },
+    {
+      "id": "opencode",
+      "name": "OpenCode",
+      "detect": [".opencode", "opencode.json", "opencode.jsonc"],
+      "skills": ".opencode/skills",
+      "instructions": null,
+      "notes": "Lee AGENTS.md de forma nativa. Tambien descubre .claude/skills y .agents/skills."
+    },
+    {
+      "id": "cursor",
+      "name": "Cursor",
+      "detect": [".cursor", ".cursorrules"],
+      "skills": ".cursor/skills",
+      "instructions": null,
+      "notes": "Lee AGENTS.md de forma nativa. Tambien descubre .agents/skills, .claude/skills y .codex/skills."
+    },
+    {
+      "id": "codex",
+      "name": "Codex",
+      "detect": [".codex"],
+      "skills": null,
+      "instructions": null,
+      "notes": "Lee AGENTS.md de forma nativa. Descubre skills de proyecto en .agents/skills (ruta confirmada solo por fuentes de terceros; .codex/skills no esta confirmada a nivel de repo)."
+    },
+    {
+      "id": "qwen-code",
+      "name": "Qwen Code",
+      "detect": [".qwen", "QWEN.md"],
+      "skills": ".qwen/skills",
+      "instructions": "QWEN.md",
+      "notes": "Lee QWEN.md (su fichero de contexto por defecto); se le deja un puntero a AGENTS.md."
+    },
+    {
+      "id": "kilocode",
+      "name": "Kilo Code",
+      "detect": [".kilocode"],
+      "skills": ".kilocode/skills",
+      "instructions": null,
+      "notes": "Skills de proyecto en .kilocode/skills (docs de Kilo). Su CLI basado en OpenCode usa ~/.config/kilo a nivel global; verificar la ruta de proyecto de esa variante."
+    },
+    {
+      "id": "kimi-code",
+      "name": "Kimi Code",
+      "detect": [".kimi-code"],
+      "skills": ".kimi-code/skills",
+      "instructions": null,
+      "notes": "Lee AGENTS.md (kimi-code v0.11+). Skills de proyecto: .kimi-code/skills y .agents/skills (docs de Kimi)."
+    },
+    {
+      "id": "agents-standard",
+      "name": "Estandar .agents",
+      "detect": [".agents"],
+      "skills": ".agents/skills",
+      "instructions": null,
+      "always": true,
+      "notes": "Ubicacion generica de Agent Skills; la leen OpenCode, Cursor, Kimi y Codex."
+    }
+  ]
+}

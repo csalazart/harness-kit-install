@@ -7,13 +7,16 @@
 
 ---
 
+<!-- harness-kit:start-here -->
 ## Para cualquier IA: empieza aquí
 
 > Si eres una IA y acabas de abrir este proyecto, este es tu punto de entrada.
 > El protocolo de handshake, flujo de workspaces y reglas universales son de obligado cumplimiento.
+<!-- harness-kit:start-here end -->
 
 ---
 
+<!-- harness-kit:operating-mode -->
 ## Modo de operación
 
 1. **Modo PLAN** — recopila información y define un plan con el usuario. No se realizan cambios en el código ni en el repositorio.
@@ -26,9 +29,11 @@
 - Activar modo TUTOR cuando el prompt contenga `TUTOR:`. Permanecer en modo TUTOR hasta que el usuario indique explícitamente un cambio de modo (`PLAN` o `ACT`).
 - En modo PLAN: mostrar siempre el plan completo y actualizado en cada respuesta.
 - En modo TUTOR: nunca tocar ficheros ni ejecutar comandos que modifiquen el repositorio — solo explicar el código, la modificación propuesta y el razonamiento detrás, paso a paso si el usuario lo requiere.
+<!-- harness-kit:operating-mode end -->
 
 ---
 
+<!-- harness-kit:handshake -->
 ## 1. Arranque obligatorio (Handshake)
 
 > Ejecutar esta secuencia UNA VEZ, al inicio de la sesión — antes de responder al primer mensaje del usuario o de tocar cualquier archivo. NO repetir en turnos posteriores de la misma conversación salvo que el usuario indique explícitamente que ha cambiado el contexto (nueva rama, nuevo workspace, etc.).
@@ -56,38 +61,10 @@ respuestas vacías o engañosas. El perfil del proyecto está en
 
 | Dominio | Herramienta | Cobertura |
 | --- | --- | --- |
-| **Código** | MCP `codebase-memory` | fuentes del proyecto |
+| **Código** | {{CODE_ENGINE_LABEL}} | fuentes del proyecto |
 | **Conocimiento** | scripts `query-graph.*` (graphify) | `.harness/` `docs/` `plan/` |
 
-*   **Preguntas de CÓDIGO → herramientas MCP.** Nunca los scripts de graphify:
-    el código no está en ese grafo.
-
-    | Pregunta | Llamada |
-    | --- | --- |
-    | ¿Quién llama a X? | `trace_path(function_name="X", direction="inbound")` |
-    | ¿Qué llama X? | `trace_path(direction="outbound")` |
-    | Contexto completo de llamadas | `trace_path(direction="both")` |
-    | Localizar por nombre | `search_graph(name_pattern=".*X.*")` |
-    | Código muerto | `search_graph(max_degree=0, exclude_entry_points=true)` |
-    | Impacto de mis cambios | `detect_changes()` |
-    | Ver el código exacto | `get_code_snippet(qualified_name="…")` |
-    | Estructura del proyecto | `get_architecture()` |
-    | Búsqueda textual en código | `search_code()` — preferir sobre `Grep` |
-
-    **Cuatro reglas de uso** (el resto, en `docs/KNOWLEDGE_GRAPHS.md`):
-    1. `trace_path` exige el nombre **exacto** — descúbrelo antes con `search_graph`.
-    2. `direction="outbound"` se pierde llamadas cross-service; ante duda usa `"both"`.
-    3. Los resultados paginan de 50 en 50 — comprueba `has_more` y usa `offset`
-       antes de concluir que algo no existe.
-    4. Antes de afirmar **ausencia** («no se usa», «no existe», «es código muerto»)
-       o exhaustividad, llama a `check_index_coverage` con las rutas implicadas.
-       Un resultado limpio significa *«no hay hueco registrado»*, **no** prueba de
-       completitud: si reporta cobertura parcial, saltada o desconocida, lee el
-       rango real antes de responder.
-
-    > Si el perfil es **DOC** no hay MCP: el código está en el grafo de
-    > graphify (o se lee directamente — son pocos ficheros). Consultar
-    > `.harness/PROFILE.md` en caso de duda.
+{{include:code-graph/{{CODE_ENGINE}}/routing.md}}
 
 *   **Cuándo SÍ usar `Grep`/`Glob`/`Read` sin pasar por el grafo:** texto plano,
     configuración, ficheros que no son código, y **siempre `Read` un fichero
@@ -108,7 +85,7 @@ respuestas vacías o engañosas. El perfil del proyecto está en
 *   **Preguntas MIXTAS** («¿está implementado este plan?», «¿la doc describe
     el código real?», «¿se cumple esta regla?»): usar la skill `doc-code-audit`
     — extrae la afirmación del grafo de conocimiento y la verifica con
-    `search_graph`. Citar ambas fuentes: `doc:línea` y símbolo real del código.
+    el motor de código. Citar ambas fuentes: `doc:línea` y símbolo real del código.
 
 > **Nota histórica (v3):** graphify daba falsos negativos en "quién importa X"
 > cuando el proyecto usa alias (`@/`, `~/`) y la cadena de `tsconfig.json` se
@@ -118,9 +95,7 @@ respuestas vacías o engañosas. El perfil del proyecto está en
 > confirmar con `Grep` antes de concluir que algo no se usa.
 
 **Mantenimiento de los grafos:**
-*   Tras modificar **código**: nada manual (perfiles CODE/MIXTO) — el MCP
-    detecta cambios. Para forzar reindexado: `.\scripts\index-code.ps1` /
-    `./scripts/index-code.sh`.
+{{include:code-graph/{{CODE_ENGINE}}/maintenance.md}}
 *   Tras modificar **documentación**, `.harness/context/`, `.harness/rules/`,
     `.harness/llm-wiki/`, `docs/`, `plan/`: ejecutar `update-graph`.
     **Cuesta tokens** (extracción semántica) — agrupa las ediciones.
@@ -148,9 +123,11 @@ node init.js
 
 **Paso 5 — Confirmar antes de actuar:**
 > Presenta al director un resumen de lo que entendiste y pregunta en qué trabajar hoy.
+<!-- harness-kit:handshake end -->
 
 ---
 
+<!-- harness-kit:repo-map -->
 ## 2. Mapa del repositorio (Resumen)
 
 | Archivo / Carpeta | Propósito | Quién lo actualiza |
@@ -164,9 +141,11 @@ node init.js
 | `.harness/rules/` | Reglas y contexto por área/agente | Orquestador al inicializar |
 | `.harness/workspaces/` | Oficina temporal de tareas activas (orden.md, session.md) | `harness-start.js` / Especialistas |
 | `.harness/logs/` | Histórico de tareas completadas y SUMMARY.md | `harness-finish.js` automáticamente |
+<!-- harness-kit:repo-map end -->
 
 ---
 
+<!-- harness-kit:roles -->
 ## 3. Roles y reglas universales (no negociables)
 
 *   **Leader / Orquestador**: Lee STATE.md, gestiona workspaces, coordina. NUNCA escribe código.
@@ -176,14 +155,16 @@ node init.js
 *   **Escribir en disco, no en chat**: Decisiones, reportes y hallazgos van en `session.md` de la tarea.
 *   **Verificación real obligatoria**: Ejecutar tests y comandos reales, no asumir que funciona.
 *   **Commits antes de cerrar**: Toda sesión termina con commit semántico y `node init.js` en verde.
-*   **Jerarquía de búsqueda**: **MCP `codebase-memory`** (código) /
+*   **Jerarquía de búsqueda**: **{{CODE_ENGINE_LABEL}}** (código) /
     **graphify** (conocimiento) → Glob (nombres de fichero) → Grep
     (símbolos/contenido) → subagente Explore (solo si se prevén 3+ rondas).
     Las dos primeras son alternativas por dominio, no pasos consecutivos.
     No saltar al subagente si una búsqueda dirigida basta.
+<!-- harness-kit:roles end -->
 
 ---
 
+<!-- harness-kit:workflow -->
 ## 4. Flujo de trabajo por tarea (Workspace Protocol)
 
 ### Paso A — El Orquestador crea el workspace
@@ -203,17 +184,21 @@ El especialista lee `orden.md`, programa la lógica, añade pruebas, documenta c
 node scripts/harness-finish.js --task nombre_tarea
 ```
 Archiva la sesión en `.harness/logs/`, actualiza el histórico `SUMMARY.md`, marca la tarea como resuelta en `STATE.md` y limpia la carpeta temporal.
+<!-- harness-kit:workflow end -->
 
 ---
 
+<!-- harness-kit:handoff -->
 ## 5. Cierre de sesión (Hand-off)
 
 Antes de terminar cualquier sesión de trabajo:
 1.  **Especialista**: Rellenar el "Reporte Final" de `session.md`, verificar salud con `node init.js`, realizar commit semántico y notificar al orquestador.
 2.  **Orquestador**: Archivar la tarea con `harness-finish.js`, actualizar decisiones pendientes en `STATE.md`, verificar salud y hacer commit descriptivo.
+<!-- harness-kit:handoff end -->
 
 ---
 
+<!-- harness-kit:reference -->
 ## 📖 Más información detallada (Bajo Demanda)
 
 Para los siguientes temas puramente informativos o de referencia, **abre y lee `docs/AGENTS_REFERENCE.md`**:
@@ -221,3 +206,4 @@ Para los siguientes temas puramente informativos o de referencia, **abre y lee `
 2. **Escala de esfuerzo y decisión de sub-agentes**
 3. **Detalle completo de proactividad de los Skills**
 4. **Protocolo para Escalado de decisiones bloqueantes**
+<!-- harness-kit:reference end -->

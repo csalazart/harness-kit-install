@@ -72,11 +72,18 @@ if (fs.existsSync(statePath)) {
 console.log("\n  ▸ [2/5] Skills de IA");
 
 const skillsSrc = path.join(__dirname, '.harness', 'skills');
-const agentDirs = [
+// La lista de agentes sale de scripts/harness-agents.json (misma matriz que usa harness-link-skills.js)
+let agentDirs = [
   { name: 'Claude Code', skillsPath: path.join(__dirname, '.claude',  'skills') },
   { name: 'Gemini',      skillsPath: path.join(__dirname, '.gemini',  'skills') },
   { name: 'Estándar',    skillsPath: path.join(__dirname, '.agents',  'skills') },
 ];
+try {
+  const matrix = JSON.parse(fs.readFileSync(path.join(__dirname, 'scripts', 'harness-agents.json'), 'utf8'));
+  agentDirs = matrix.agents
+    .filter(a => a.skills)
+    .map(a => ({ name: a.name, skillsPath: path.join(__dirname, ...a.skills.split('/')) }));
+} catch { /* sin matriz: se usa la lista por defecto */ }
 
 if (!fs.existsSync(skillsSrc)) {
   console.log('  ℹ️   .harness/skills/ no existe — sin skills instalados');
@@ -128,25 +135,48 @@ check('Grafo de conocimiento generado (graphify-out/graph.json)',
   'Ver prompts/01_init.md §3.5.1 paso c.'
 );
 
-// 3.c — MCP: obligatorio solo si el perfil lo requiere
-if (profile === 'CODE') {
+// 3.c — Motor de código (MCP): obligatorio solo si el perfil lo requiere.
+// El motor sale del campo "Motor de código" de PROFILE.md; sin él, codebase-memory
+// (único motor antes de 1.4.2).
+const ENGINES = {
+  'codebase-memory': { key: 'codebase-memory', label: 'codebase-memory-mcp', hint: 'prompts/01_init.md §3.5.2' },
+  'codegraph':       { key: 'codegraph',       label: 'CodeGraph',           hint: 'prompts/01_init.md §3.5.2-B' },
+};
+let engine = 'codebase-memory';
+try {
+  const em = fs.readFileSync(profilePath, 'utf8')
+    .match(/^-?\s*\*{0,2}Motor de c[oó]digo[\s*:]*`?(codebase-memory|codegraph|none)\b/mi);
+  if (em) engine = em[1].toLowerCase();
+} catch { /* sin PROFILE: se usa el motor por defecto */ }
+const eng = ENGINES[engine];
+
+if (engine === 'none') {
+  console.log('  ℹ️   Motor de código: ninguno — sin grafo de código por decisión del perfil');
+} else if (profile === 'CODE') {
   const mcpPath = path.join(__dirname, '.mcp.json');
   let hasMcp = false;
   if (fs.existsSync(mcpPath)) {
     try {
       const cfg = JSON.parse(fs.readFileSync(mcpPath, 'utf8'));
-      hasMcp = !!(cfg.mcpServers && cfg.mcpServers['codebase-memory']);
+      hasMcp = !!(cfg.mcpServers && cfg.mcpServers[eng.key]);
     } catch (e) {
       console.log('  ⚠️   .mcp.json existe pero NO es JSON válido: ' + e.message);
       console.log('       (causa habitual en Windows: backslashes sin escapar en "command")');
     }
   }
-  check('codebase-memory declarado en .mcp.json (perfil CODE)',
+  check(`${eng.label} declarado en .mcp.json (perfil CODE)`,
     hasMcp,
-    'El perfil CODE requiere codebase-memory-mcp. Ver prompts/01_init.md §3.5.2.'
+    `El perfil CODE requiere ${eng.label}. Ver ${eng.hint}.`
   );
+  if (engine === 'codegraph') {
+    if (fs.existsSync(path.join(__dirname, '.codegraph'))) {
+      console.log('  ✅  Índice de CodeGraph presente (.codegraph/)');
+    } else {
+      console.log('  ⚠️   Falta el índice .codegraph/ — créalo una vez con: codegraph init .');
+    }
+  }
 } else if (profile === 'MIXTO') {
-  console.log('  ℹ️   Perfil MIXTO — codebase-memory-mcp es opcional (ver .harness/PROFILE.md)');
+  console.log(`  ℹ️   Perfil MIXTO — ${eng.label} es opcional (ver .harness/PROFILE.md)`);
 } else if (profile === 'DOC') {
   console.log('  ℹ️   Perfil DOC — sin MCP por diseño; graphify cubre ambos dominios');
 }

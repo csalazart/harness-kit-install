@@ -48,8 +48,8 @@ graphify-out/                      ← grafo de conocimiento (docs, .harness/, p
 ```
 
 > **Grafo dual de conocimiento (v4):** `graphify` (conocimiento) se instala
-> siempre; `codebase-memory-mcp` (código) solo si el perfil del proyecto es
-> CODE, o MIXTO y decides activarlo. Ver `docs/KNOWLEDGE_GRAPHS.md` una vez
+> siempre; un motor de código (`codebase-memory-mcp` o `codegraph`, a tu elección o `auto`) solo
+> si el perfil del proyecto es CODE, o MIXTO y decides activarlo. Ver `docs/KNOWLEDGE_GRAPHS.md` una vez
 > instalado para la tabla de enrutamiento completa entre ambos.
 
 ---

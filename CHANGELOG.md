@@ -31,6 +31,43 @@ and this project uses a versioning scheme inspired by [Semantic Versioning](http
 
 ## [Unreleased]
 
+## [1.4.2] - 2026-10-15
+
+Multi-agent skill linking and marker-based instruction merging.
+
+### Added
+- `templates/harness-agents.json`: agent matrix (detection paths, native skills folder,
+  instruction file) for Claude Code, Gemini CLI, OpenCode, Cursor, Codex, Qwen Code,
+  Kilo Code, Kimi Code and the open `.agents` standard.
+- `templates/harness-merge-instructions.js.template`: merges the kit's sections into
+  `AGENTS.md`, `CLAUDE.md`, `GEMINI.md` and other agents' instruction files using
+  `<!-- harness-kit:ID -->` … `<!-- harness-kit:ID end -->` markers. Never overwrites
+  project content: appends missing blocks, updates unedited ones, respects hand edits,
+  backs up to `.harness/backups/`, and adopts pre-marker sections with `--adopt`.
+- `templates/AGENT_POINTER.md.template` for agents with their own instruction file.
+- **CodeGraph as an alternative code-graph engine** (`@colbymchenry/codegraph`, MCP
+  `codegraph serve --mcp`, tool `codegraph_explore`, index in `.codegraph/`). The user picks
+  `codebase-memory`, `codegraph` or `auto` (the AI decides with explicit criteria, see
+  `01_init.md` phase B.6.b); only one engine runs at a time. New `templates/code-graph/`
+  (per-engine routing/maintenance fragments, `.mcp.json` entries, `engines.json`).
+- `{{include:...}}` directive in `harness-merge-instructions` and `CODE_ENGINE` variable, so the
+  engine-dependent blocks of `AGENTS.md` are rendered per engine.
+
+### Changed
+- `harness-link-skills.js` now links `.harness/skills/` into every agent detected in the
+  project (was Claude Code, Gemini and `.agents` only); new `--list`, `--agents`, `--all`,
+  `--dry-run`, `--copy`, `--source`, `--root` options; never overwrites an existing folder.
+- `AGENTS.md.template`, `CLAUDE.md.template` and `GEMINI.md.template` wrap each kit-managed
+  section in `harness-kit` markers.
+- `init.js` reads the agent matrix to report which agents have skills available.
+- `prompts/01_init.md` (sections 1, 3, 5, 9, 10) and `prompts/07_upgrade_v3_to_v4.md` use
+  the new scripts instead of copying instruction files by hand.
+- `Kit-Version` stamp bumped to `1.4.2`; version banners updated in `README.md`,
+  `README_ES.md` and `INSTALL.md`.
+- `.harness/PROFILE.md` records `Motor de código`, how it was selected and why; `init.js`/`init.sh`,
+  `index-code.*`, the `doc-code-audit` skill, `docs/KNOWLEDGE_GRAPHS.md` and prompt 07 are
+  engine-aware. Projects without the field keep working as `codebase-memory`.
+
 ## [1.4.1] - 2026-10-15
 
 Documentation and version-stamp patch release. No structural changes to the kit:

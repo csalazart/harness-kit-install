@@ -1,14 +1,45 @@
 #!/usr/bin/env bash
-# index-code.sh — Reindexado del grafo de CÓDIGO (codebase-memory-mcp)
+# index-code.sh — Reindexado del grafo de CÓDIGO (codebase-memory-mcp | codegraph)
 # Generado por harness-kit · Proyecto: {{PROJECT_NAME}}
 #
 # Solo aplica a perfiles CODE y MIXTO-con-MCP (ver .harness/PROFILE.md).
-# Usa el modo CLI one-shot de codebase-memory-mcp — nunca arranca el daemon,
-# apto para scripts y hooks. Usa flags, nunca JSON crudo (deprecado).
+# El motor sale del campo "Motor de código" de PROFILE.md (por defecto codebase-memory).
+# - codebase-memory: modo CLI one-shot — nunca arranca el daemon, apto para scripts y
+#   hooks. Usa flags, nunca JSON crudo (deprecado).
+# - codegraph: `codegraph init .` si no hay índice, `codegraph sync -q .` si ya existe.
 #
 # USO: ./scripts/index-code.sh
 
 set -euo pipefail
+
+ENGINE="codebase-memory"
+if [ -f ".harness/PROFILE.md" ]; then
+  E=$(grep -iE '^-?[[:space:]]*\*{0,2}Motor de c.{1,2}digo' .harness/PROFILE.md 2>/dev/null \
+        | grep -oE 'codebase-memory|codegraph|none' | head -1 || true)
+  [ -n "$E" ] && ENGINE="$E"
+fi
+
+if [ "$ENGINE" = "none" ]; then
+  echo "El perfil no instala motor de código (Motor de código: none). Nada que indexar."
+  exit 0
+fi
+
+if [ "$ENGINE" = "codegraph" ]; then
+  if ! command -v codegraph &>/dev/null; then
+    echo "codegraph no está en el PATH. Ver docs/KNOWLEDGE_GRAPHS.md." >&2
+    exit 1
+  fi
+  if [ ! -d ".codegraph" ]; then
+    echo "Creando el índice de CodeGraph (primera vez)..."
+    codegraph init .
+  else
+    echo "Sincronizando el índice de CodeGraph..."
+    codegraph sync -q .
+  fi
+  echo "Estado del índice:"
+  codegraph status
+  exit 0
+fi
 
 if ! command -v codebase-memory-mcp &>/dev/null; then
   echo "codebase-memory-mcp no está en el PATH. Ver docs/KNOWLEDGE_GRAPHS.md." >&2

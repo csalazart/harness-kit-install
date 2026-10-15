@@ -1,0 +1,405 @@
+#!/usr/bin/env node
+/**
+ * harness-merge-instructions.js — Fusiona las secciones del harness-kit en AGENTS.md,
+ * CLAUDE.md, GEMINI.md y los ficheros de instrucciones de otros agentes, sin pisar nada ajeno.
+ * Generado por harness-kit · Proyecto: {{PROJECT_NAME}}
+ *
+ * USO:
+ *   node scripts/harness-merge-instructions.js --sync                  # AGENTS.md + ficheros de los agentes detectados
+ *   node scripts/harness-merge-instructions.js --sync --agents=claude-code,qwen-code
+ *   node scripts/harness-merge-instructions.js --template AGENTS.md.template --target AGENTS.md
+ *   Opciones: --dry-run  --adopt  --force  --var CLAVE=VALOR  --root DIR  --templates DIR
+ *
+ * MOTOR DE CODIGO. Las partes de AGENTS.md que dependen del grafo de codigo se componen
+ * desde code-graph/<motor>/*.md con lineas `{{include:...}}`. El motor sale de
+ * --var CODE_ENGINE=codebase-memory|codegraph|none, o del campo "Motor de código" de
+ * .harness/PROFILE.md, o (sin ninguno) del default de code-graph/engines.json. Cambiar de
+ * motor y volver a ejecutar --sync actualiza esos bloques si nadie los edito a mano.
+ *
+ * MARCAS. Cada seccion gestionada por el kit va entre estas dos lineas:
+ *
+ *     <!-- harness-kit:ID -->
+ *     ...contenido...
+ *     <!-- harness-kit:ID end -->
+ *
+ * Todo lo que quede FUERA de las marcas es del proyecto y no se toca.
+ *
+ * REGLAS:
+ *   - El fichero no existe              → se crea desde la plantilla.
+ *   - Existe y el bloque ya esta        → se actualiza solo si el contenido cambio Y nadie lo
+ *                                         edito a mano desde la ultima vez (huella en
+ *                                         .harness/instructions.lock.json). Si fue editado:
+ *                                         se respeta y se avisa; --force lo sobrescribe.
+ *   - Existe y el bloque NO esta        → se anade al final del fichero.
+ *   - Existe la seccion sin marcas (instalacion anterior al kit con marcas): se avisa y no se
+ *     duplica; --adopt la envuelve en marcas (con copia de seguridad).
+ *   - Marcas descuadradas / anidadas / repetidas, o el destino es un symlink → no se escribe.
+ *   - Antes de modificar un fichero existente se guarda copia en .harness/backups/.
+ */
+
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
+
+// ─────────────────────────────────────────────────────────────
+// Argumentos
+// ─────────────────────────────────────────────────────────────
+
+const argv = process.argv.slice(2);
+const flag = n => argv.includes(`--${n}`);
+function option(n) {
+  const eq = argv.find(a => a.startsWith(`--${n}=`));
+  if (eq) return eq.slice(n.length + 3);
+  const i = argv.indexOf(`--${n}`);
+  return i !== -1 && argv[i + 1] && !argv[i + 1].startsWith('--') ? argv[i + 1] : null;
+}
+function varsFromArgs() {
+  const out = {};
+  for (let i = 0; i < argv.length; i++) {
+    let kv = null;
+    if (argv[i] === '--var' && argv[i + 1]) kv = argv[++i];
+    else if (argv[i].startsWith('--var=')) kv = argv[i].slice(6);
+    if (kv) {
+      const j = kv.indexOf('=');
+      if (j > 0) out[kv.slice(0, j)] = kv.slice(j + 1);
+    }
+  }
+  return out;
+}
+
+const SCRIPT_DIR = __dirname;
+const ROOT = path.resolve(
+  option('root') || (path.basename(SCRIPT_DIR) === 'scripts' ? path.dirname(SCRIPT_DIR) : process.cwd())
+);
+const DRY = flag('dry-run');
+const ADOPT = flag('adopt');
+const FORCE = flag('force');
+
+// ─────────────────────────────────────────────────────────────
+// Localizar plantillas y matriz
+// ─────────────────────────────────────────────────────────────
+
+function findTemplatesDir() {
+  const candidates = [
+    option('templates'),
+    fs.existsSync(path.join(SCRIPT_DIR, 'AGENTS.md.template')) ? SCRIPT_DIR : null,
+    path.join(ROOT, 'harness-kit', 'templates'),
+    path.join(ROOT, 'harness-kit-install', 'templates'),
+  ].filter(Boolean).map(p => path.resolve(p));
+  return candidates.find(d => fs.existsSync(path.join(d, 'AGENTS.md.template'))) || null;
+}
+const TEMPLATES = findTemplatesDir();
+
+function loadMatrix() {
+  const cands = [path.join(SCRIPT_DIR, 'harness-agents.json'), TEMPLATES && path.join(TEMPLATES, 'harness-agents.json')].filter(Boolean);
+  const p = cands.find(fs.existsSync);
+  return p ? JSON.parse(fs.readFileSync(p, 'utf8')) : null;
+}
+
+// ─────────────────────────────────────────────────────────────
+// Marcas
+// ─────────────────────────────────────────────────────────────
+
+const OPEN = /^[ \t]*<!--\s*harness-kit:([A-Za-z0-9._-]+)\s*-->[ \t]*$/;
+const CLOSE = /^[ \t]*<!--\s*harness-kit:([A-Za-z0-9._-]+)\s+end\s*-->[ \t]*$/;
+
+/** @returns {{blocks: {id:string,open:number,close:number}[], error: string|null}} */
+function parseBlocks(lines) {
+  const blocks = [];
+  let cur = null;
+  for (let i = 0; i < lines.length; i++) {
+    const o = OPEN.exec(lines[i]);
+    const c = CLOSE.exec(lines[i]);
+    if (o) {
+      if (cur) return { blocks, error: `marca "${o[1]}" abierta dentro de "${cur.id}" (linea ${i + 1})` };
+      if (blocks.some(b => b.id === o[1])) return { blocks, error: `bloque "${o[1]}" repetido (linea ${i + 1})` };
+      cur = { id: o[1], open: i, close: -1 };
+    } else if (c) {
+      if (!cur || cur.id !== c[1]) return { blocks, error: `cierre "${c[1]} end" sin apertura (linea ${i + 1})` };
+      cur.close = i;
+      blocks.push(cur);
+      cur = null;
+    }
+  }
+  if (cur) return { blocks, error: `bloque "${cur.id}" sin cerrar` };
+  return { blocks, error: null };
+}
+
+const contentOf = (lines, b) => lines.slice(b.open + 1, b.close);
+const sha = s => crypto.createHash('sha256').update(s.trimEnd()).digest('hex');
+const joinLines = ls => ls.join('\n');
+
+// ─────────────────────────────────────────────────────────────
+// Variables de plantilla
+// ─────────────────────────────────────────────────────────────
+
+// Motor del grafo de codigo (codebase-memory | codegraph | none). Orden: --var CODE_ENGINE,
+// campo "Motor de codigo" de .harness/PROFILE.md, default de code-graph/engines.json.
+function loadEngines() {
+  try { return JSON.parse(fs.readFileSync(path.join(TEMPLATES, 'code-graph', 'engines.json'), 'utf8')); } catch { return null; }
+}
+function profileEngine() {
+  try {
+    const raw = fs.readFileSync(path.join(ROOT, '.harness', 'PROFILE.md'), 'utf8');
+    const m = raw.match(/^-?\s*\*{0,2}Motor de c[oó]digo[\s*:]*`?(codebase-memory|codegraph|none)\b/mi);
+    return m ? m[1].toLowerCase() : null;
+  } catch { return null; }
+}
+
+function defaultVars() {
+  let name = path.basename(ROOT);
+  try { name = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).name || name; } catch {}
+  const vars = { PROJECT_NAME: name, DATE: new Date().toISOString().slice(0, 10) };
+  const engines = loadEngines();
+  if (engines) {
+    const id = varsFromArgs().CODE_ENGINE || profileEngine() || engines.default;
+    if (!engines.engines[id]) throw new Error(`motor de codigo desconocido "${id}" (validos: ${Object.keys(engines.engines).join(', ')})`);
+    vars.CODE_ENGINE = id;
+    vars.CODE_ENGINE_LABEL = engines.engines[id].label;
+  }
+  return vars;
+}
+function resolveText(text, vars) {
+  return text.replace(/\{\{([A-Z0-9_]+)\}\}/g, (m, k) => (k in vars ? vars[k] : m));
+}
+// Una linea `{{include:ruta/relativa.md}}` se sustituye por el contenido del fichero
+// (ruta relativa a la carpeta de plantillas; no puede salir de ella).
+function expandIncludes(text) {
+  const out = [];
+  for (const line of text.split(/\r?\n/)) {
+    const m = /^\s*\{\{include:([^}]+)\}\}\s*$/.exec(line);
+    if (!m) { out.push(line); continue; }
+    const file = path.resolve(TEMPLATES, m[1].trim());
+    if (!file.startsWith(TEMPLATES + path.sep)) throw new Error(`include fuera de plantillas: ${m[1]}`);
+    if (!fs.existsSync(file)) throw new Error(`include inexistente: ${m[1].trim()}`);
+    out.push(...fs.readFileSync(file, 'utf8').replace(/\r?\n$/, '').split(/\r?\n/));
+  }
+  return out.join('\n');
+}
+
+// ─────────────────────────────────────────────────────────────
+// Lock (huella de lo que el kit escribio por ultima vez)
+// ─────────────────────────────────────────────────────────────
+
+const LOCK_PATH = path.join(ROOT, '.harness', 'instructions.lock.json');
+let LOCK = {};
+try { LOCK = JSON.parse(fs.readFileSync(LOCK_PATH, 'utf8')); } catch {}
+const lockKey = (relTarget, id) => `${relTarget}#${id}`;
+
+function saveLock() {
+  if (DRY) return;
+  fs.mkdirSync(path.dirname(LOCK_PATH), { recursive: true });
+  fs.writeFileSync(LOCK_PATH, JSON.stringify(LOCK, null, 2) + '\n');
+}
+
+// ─────────────────────────────────────────────────────────────
+// Seccion existente sin marcas
+// ─────────────────────────────────────────────────────────────
+
+/** Indices cubiertos por bloques gestionados. */
+function coveredSet(lines, blocks) {
+  const s = new Set();
+  for (const b of blocks) for (let i = b.open; i <= b.close; i++) s.add(i);
+  return s;
+}
+
+/** Busca la seccion del bloque escrita a mano / por una version anterior. @returns {{start,end}|'differs'|null} */
+function findLegacy(lines, blocks, blockLines) {
+  const nonEmpty = blockLines.filter(l => l.trim() !== '');
+  if (!nonEmpty.length) return null;
+  const anchor = nonEmpty[0].trim();
+  const covered = coveredSet(lines, blocks);
+  let fence = false;
+  for (let i = 0; i < lines.length; i++) {
+    if (/^\s*```/.test(lines[i])) fence = !fence;
+    if (fence || covered.has(i) || lines[i].trim() !== anchor) continue;
+
+    const m = /^(#+)\s/.exec(anchor);
+    if (m) {
+      const level = m[1].length;
+      let end = lines.length, f = false;
+      for (let j = i + 1; j < lines.length; j++) {
+        if (/^\s*```/.test(lines[j])) f = !f;
+        if (f) continue;
+        const h = /^(#+)\s/.exec(lines[j]);
+        if ((h && h[1].length <= level) || lines[j].trim() === '---') { end = j; break; }
+      }
+      while (end > i + 1 && lines[end - 1].trim() === '') end--;
+      return { start: i, end };
+    }
+    const want = nonEmpty.map(l => l.trim());
+    const got = lines.slice(i, i + want.length).map(l => l.trim());
+    return want.every((l, k) => l === got[k]) ? { start: i, end: i + want.length } : 'differs';
+  }
+  return null;
+}
+
+// ─────────────────────────────────────────────────────────────
+// Fusion de un fichero
+// ─────────────────────────────────────────────────────────────
+
+const rel = p => path.relative(ROOT, p).split(path.sep).join('/');
+const log = [];
+let errors = 0;
+
+function backup(target) {
+  const stamp = new Date().toISOString().replace(/[-:T.Z]/g, '').slice(0, 17);
+  const hasHarness = fs.existsSync(path.join(ROOT, '.harness'));
+  const name = `${rel(target).replace(/\//g, '_')}.${stamp}.bak`;
+  const dest = hasHarness ? path.join(ROOT, '.harness', 'backups', name) : `${target}.harness-bak`;
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
+  fs.copyFileSync(target, dest);
+  return rel(dest);
+}
+
+function mergeFile(templateName, targetRel, extraVars) {
+  const templatePath = path.join(TEMPLATES, templateName);
+  const target = path.join(ROOT, targetRel);
+  const report = (status, msg = '') => log.push({ status, file: targetRel, msg });
+
+  if (!fs.existsSync(templatePath)) { errors++; return report('error', `no existe la plantilla ${templateName}`); }
+
+  let vars, tplLines;
+  try {
+    vars = { ...defaultVars(), ...extraVars, ...varsFromArgs() };
+    const tplRaw = fs.readFileSync(templatePath, 'utf8');
+    tplLines = expandIncludes(resolveText(tplRaw, vars)).split(/\r?\n/);
+  } catch (e) {
+    errors++;
+    return report('error', e.message);
+  }
+  const tpl = parseBlocks(tplLines);
+  if (tpl.error) { errors++; return report('error', `plantilla ${templateName}: ${tpl.error}`); }
+  if (!tpl.blocks.length) { errors++; return report('error', `la plantilla ${templateName} no tiene marcas harness-kit`); }
+
+  // ── Destino inexistente: crear ──
+  if (!fs.existsSync(target)) {
+    if (!DRY) {
+      fs.mkdirSync(path.dirname(target), { recursive: true });
+      fs.writeFileSync(target, tplLines.join('\n'));
+    }
+    for (const b of tpl.blocks) LOCK[lockKey(targetRel, b.id)] = sha(joinLines(contentOf(tplLines, b)));
+    return report('created', `${tpl.blocks.length} bloque(s)`);
+  }
+
+  // ── Destino existente: fusionar ──
+  if (fs.lstatSync(target).isSymbolicLink()) { errors++; return report('error', 'es un symlink — no se reescribe'); }
+
+  const raw = fs.readFileSync(target, 'utf8');
+  const eol = raw.includes('\r\n') ? '\r\n' : '\n';
+  let lines = raw.split(/\r?\n/);
+  let parsed = parseBlocks(lines);
+  if (parsed.error) { errors++; return report('error', `marcas invalidas: ${parsed.error} — corrigelo a mano`); }
+
+  const actions = [];
+  let changed = false;
+
+  for (const tb of tpl.blocks) {
+    const newLines = contentOf(tplLines, tb);
+    const key = lockKey(targetRel, tb.id);
+    const cur = parsed.blocks.find(b => b.id === tb.id);
+
+    if (cur) {
+      const curLines = contentOf(lines, cur);
+      const curHash = sha(joinLines(curLines));
+      if (curHash === sha(joinLines(newLines))) {
+        LOCK[key] = curHash;
+        actions.push(`${tb.id}: sin cambios`);
+      } else if (FORCE || LOCK[key] === curHash) {
+        lines.splice(cur.open + 1, cur.close - cur.open - 1, ...newLines);
+        LOCK[key] = sha(joinLines(newLines));
+        actions.push(`${tb.id}: actualizado`);
+        changed = true;
+      } else {
+        actions.push(`${tb.id}: EDITADO A MANO — se respeta (usa --force para sobrescribir)`);
+      }
+    } else {
+      const legacy = findLegacy(lines, parsed.blocks, newLines);
+      const wrapped = [`<!-- harness-kit:${tb.id} -->`, ...newLines, `<!-- harness-kit:${tb.id} end -->`];
+      if (legacy === 'differs') {
+        actions.push(`${tb.id}: ya hay contenido equivalente sin marcas y distinto — revisalo a mano`);
+      } else if (legacy) {
+        if (ADOPT) {
+          lines.splice(legacy.start, legacy.end - legacy.start, ...wrapped);
+          LOCK[key] = sha(joinLines(newLines));
+          actions.push(`${tb.id}: adoptado (seccion existente envuelta en marcas)`);
+          changed = true;
+        } else {
+          actions.push(`${tb.id}: seccion existente SIN marcas — no se duplica (usa --adopt)`);
+        }
+      } else {
+        while (lines.length && lines[lines.length - 1].trim() === '') lines.pop();
+        lines.push('', ...wrapped, '');
+        LOCK[key] = sha(joinLines(newLines));
+        actions.push(`${tb.id}: anadido al final`);
+        changed = true;
+      }
+    }
+    parsed = parseBlocks(lines);
+    if (parsed.error) { errors++; return report('error', `tras fusionar: ${parsed.error}`); }
+  }
+
+  let bak = '';
+  if (changed && !DRY) {
+    bak = backup(target);
+    fs.writeFileSync(target, lines.join('\n').replace(/\n/g, eol));
+  }
+  report(changed ? 'merged' : 'unchanged', actions.join(' · ') + (bak ? ` · copia: ${bak}` : ''));
+}
+
+// ─────────────────────────────────────────────────────────────
+// Main
+// ─────────────────────────────────────────────────────────────
+
+if (!TEMPLATES) {
+  console.error('  ❌  No encuentro las plantillas del kit (AGENTS.md.template). Usa --templates DIR.');
+  process.exit(1);
+}
+
+let jobs = [];
+if (flag('sync')) {
+  const matrix = loadMatrix();
+  jobs.push({ template: 'AGENTS.md.template', target: 'AGENTS.md', vars: {} });
+  if (matrix) {
+    const requested = (option('agents') || '').split(',').map(s => s.trim()).filter(Boolean);
+    const unknown = requested.filter(id => !matrix.agents.some(a => a.id === id));
+    if (unknown.length) { console.error(`  ❌  Agentes desconocidos: ${unknown.join(', ')}`); process.exit(1); }
+    for (const a of matrix.agents) {
+      if (!a.instructions) continue;
+      const wanted = requested.includes(a.id) || (a.detect || []).some(p => fs.existsSync(path.join(ROOT, p)));
+      if (!wanted || jobs.some(j => j.target === a.instructions)) continue;
+      jobs.push({
+        template: a.template || 'AGENT_POINTER.md.template',
+        target: a.instructions,
+        vars: { AGENT_FILE: path.basename(a.instructions), AGENT_NAME: a.name },
+      });
+    }
+  }
+} else if (option('template') && option('target')) {
+  const t = option('template');
+  jobs.push({
+    template: path.isAbsolute(t) ? path.relative(TEMPLATES, t) : t,
+    target: option('target'),
+    vars: { AGENT_FILE: path.basename(option('target')), AGENT_NAME: path.basename(option('target'), path.extname(option('target'))) },
+  });
+} else {
+  console.error('  Uso: harness-merge-instructions.js --sync | --template FILE --target FILE  [--dry-run] [--adopt] [--force]');
+  process.exit(1);
+}
+
+console.log('\n══════════════════════════════════════════════════');
+console.log(`  HARNESS MERGE INSTRUCTIONS${DRY ? '  (dry-run)' : ''}`);
+console.log('══════════════════════════════════════════════════\n');
+console.log(`  Raiz      : ${ROOT}`);
+console.log(`  Plantillas: ${TEMPLATES}\n`);
+
+for (const j of jobs) mergeFile(j.template, j.target, j.vars);
+saveLock();
+
+const icon = { created: '🆕', merged: '✅', unchanged: '✅', error: '❌' };
+for (const l of log) console.log(`  ${icon[l.status] || '•'}  ${l.file.padEnd(28)} ${l.status}${l.msg ? ' — ' + l.msg : ''}`);
+
+console.log('\n══════════════════════════════════════════════════');
+console.log(errors === 0 ? '  ✅  [INSTRUCCIONES OK]' : `  ❌  [INSTRUCCIONES CON ERRORES] — ${errors}`);
+console.log('══════════════════════════════════════════════════\n');
+process.exit(errors ? 1 : 0);

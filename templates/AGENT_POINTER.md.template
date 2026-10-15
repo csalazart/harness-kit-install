@@ -1,0 +1,16 @@
+# {{AGENT_FILE}} — {{PROJECT_NAME}}
+> Instrucciones para {{AGENT_NAME}} en este proyecto.
+> Última actualización: {{DATE}}
+
+---
+
+<!-- harness-kit:agents-pointer -->
+## Protocolo del proyecto
+
+**Lee `AGENTS.md` completo antes de cualquier otra cosa.**
+
+`AGENTS.md` es el protocolo universal de este proyecto y aplica a cualquier IA:
+contiene el handshake, los roles, el mapa del repositorio, las reglas y el hand-off.
+Este archivo (`{{AGENT_FILE}}`) solo puede añadir comportamiento específico de {{AGENT_NAME}}
+por encima de ese protocolo, nunca sustituirlo.
+<!-- harness-kit:agents-pointer end -->

@@ -34,6 +34,44 @@ proyecto usa un versionado inspirado en [Semantic Versioning](https://semver.org
 
 ## [Unreleased]
 
+## [1.4.2] - 2026-10-15
+
+Enlace de skills multi-agente y fusión de instrucciones con marcas.
+
+### Añadido
+- `templates/harness-agents.json`: matriz de agentes (rutas de detección, carpeta nativa de
+  skills, fichero de instrucciones) para Claude Code, Gemini CLI, OpenCode, Cursor, Codex,
+  Qwen Code, Kilo Code, Kimi Code y el estándar abierto `.agents`.
+- `templates/harness-merge-instructions.js.template`: fusiona las secciones del kit en
+  `AGENTS.md`, `CLAUDE.md`, `GEMINI.md` y los ficheros de otros agentes con marcas
+  `<!-- harness-kit:ID -->` … `<!-- harness-kit:ID end -->`. Nunca pisa contenido del
+  proyecto: añade los bloques que faltan, actualiza los no editados, respeta las ediciones a
+  mano, guarda copia en `.harness/backups/` y adopta secciones sin marcas con `--adopt`.
+- `templates/AGENT_POINTER.md.template` para agentes con fichero de instrucciones propio.
+- **CodeGraph como motor alternativo del grafo de código** (`@colbymchenry/codegraph`, MCP
+  `codegraph serve --mcp`, herramienta `codegraph_explore`, índice en `.codegraph/`). El usuario
+  elige `codebase-memory`, `codegraph` o `auto` (decide la IA con criterios explícitos, ver
+  `01_init.md` Fase B.6.b); solo corre un motor a la vez. Nuevo `templates/code-graph/`
+  (fragmentos de enrutamiento/mantenimiento por motor, entradas de `.mcp.json`, `engines.json`).
+- Directiva `{{include:...}}` en `harness-merge-instructions` y variable `CODE_ENGINE`, para que los
+  bloques de `AGENTS.md` que dependen del motor se rendericen por motor.
+
+### Cambiado
+- `harness-link-skills.js` enlaza ahora `.harness/skills/` en todos los agentes detectados
+  en el proyecto (antes solo Claude Code, Gemini y `.agents`); opciones nuevas `--list`,
+  `--agents`, `--all`, `--dry-run`, `--copy`, `--source`, `--root`; nunca pisa una carpeta
+  existente.
+- `AGENTS.md.template`, `CLAUDE.md.template` y `GEMINI.md.template` envuelven cada sección
+  gestionada por el kit en marcas `harness-kit`.
+- `init.js` lee la matriz de agentes para informar de qué agentes tienen skills disponibles.
+- `prompts/01_init.md` (secciones 1, 3, 5, 9 y 10) y `prompts/07_upgrade_v3_to_v4.md` usan los
+  scripts nuevos en lugar de copiar a mano los ficheros de instrucciones.
+- Sello `Kit-Version` actualizado a `1.4.2`; banners de versión actualizados en `README.md`,
+  `README_ES.md` e `INSTALL.md`.
+- `.harness/PROFILE.md` registra `Motor de código`, cómo se eligió y por qué; `init.js`/`init.sh`,
+  `index-code.*`, la skill `doc-code-audit`, `docs/KNOWLEDGE_GRAPHS.md` y el prompt 07 conocen el
+  motor. Los proyectos sin ese campo siguen funcionando como `codebase-memory`.
+
 ## [1.4.1] - 2026-10-15
 
 Release de parche de documentación y sello de versión. Sin cambios estructurales en el

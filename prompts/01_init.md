@@ -165,6 +165,39 @@ Una vez que tengas suficiente contexto, produce:
    Recomienda instalarlo solo si el proyecto tiene más de 50 ficheros o usa
    TypeScript/Python con imports por alias.
 
+   **6.b Motor del grafo de código (solo perfiles CODE y MIXTO-con-MCP):**
+
+   El grafo de código lo indexa uno de dos motores, **nunca los dos a la vez**
+   (duplicarían herramientas y coste de contexto):
+
+   | Motor | Qué es | Superficie MCP | Cómo se instala |
+   | --- | --- | --- | --- |
+   | `codebase-memory` | binario estático; AST + resolución semántica; `trace_path`, `detect_changes`, Cypher, `check_index_coverage` | hasta 15 herramientas (7 con `--tool-profile=scout`) | copiando el binario a mano (§3.5.2) |
+   | `codegraph` | CLI npm `@colbymchenry/codegraph`; índice SQLite en `.codegraph/`; devuelve fuente + rutas de llamada + radio de impacto | 1 herramienta por defecto (`codegraph_explore`) | `pnpm`/`npm` global (§3.5.2-B) |
+
+   Pregunta al usuario cuál quiere: **`codebase-memory`**, **`codegraph`** o **`auto`**
+   (por defecto `auto`: decides tú). Si el perfil es DOC, el motor es `none` y no se pregunta.
+
+   Con **`auto`**, decide aplicando estos criterios EN ORDEN y registra el motivo:
+
+   1. **Señal existente:** `.mcp.json` ya declara un motor, o hay índice (`.codegraph/` o un
+      proyecto en codebase-memory) → conserva ese; no cambies de motor sin que lo pidan.
+   2. **Cobertura de lenguaje:** el lenguaje principal debe estar soportado. codegraph publica
+      34 lenguajes; en codebase-memory Solidity y Vue SFC no están confirmados
+      (`info-references/`). Si solo uno cubre el lenguaje principal → ese.
+   3. **Coste de contexto:** perfil MIXTO o contexto ajustado → codegraph (1 herramienta) o
+      codebase-memory con `--tool-profile=scout`.
+   4. **Profundidad estructural:** si el proyecto exige trazado exacto de llamadas, código
+      muerto, `detect_changes`, Cypher o `check_index_coverage` → codebase-memory.
+   5. **Entorno:** sin posibilidad de paquetes npm globales pero con binarios → codebase-memory;
+      sin poder usar binarios descargados y con Node/pnpm → codegraph (que además exige raíz
+      Git para inicializar).
+   6. **Empate** → `codebase-memory` (el motor validado en las simulaciones del kit).
+
+   Muestra el motor propuesto (o el elegido por el usuario) con su motivo junto al perfil, y
+   espera confirmación igual que con el perfil. La puerta de calidad de §3.5.2 puede revertir la
+   decisión si el lenguaje principal no se parsea con ese motor.
+
 Muéstrame este análisis y espera mi confirmación antes de continuar.
 
 ## FASE C — Construcción (solo después de mi OK)
@@ -172,8 +205,12 @@ Muéstrame este análisis y espera mi confirmación antes de continuar.
 Crea los siguientes ficheros de control adaptados a ESTE proyecto específico:
 
 ### 1. CLAUDE.md (si no existe o necesita actualización)
-Usa la plantilla de harness-kit-install/templates/CLAUDE.md.template.
-Adapta cada sección al proyecto real.
+No lo copies a mano: `CLAUDE.md` (y `GEMINI.md` y demás ficheros de instrucciones por agente) se
+generan en la Sección 5 con `scripts/harness-merge-instructions.js`, a partir de
+harness-kit-install/templates/CLAUDE.md.template, sin pisar lo que el proyecto ya tenga.
+Aquí solo reúne los datos del proyecto (descripción, stack, comandos, restricciones) y,
+una vez creado, rellena con ellos los huecos `{{...}}` que quedan FUERA de las marcas
+`<!-- harness-kit:ID -->`.
 
 ### 2. .harness/STATE.md
 Inicia el `STATE.md` copiando la plantilla `harness-kit-install/templates/STATE.md.template`.
@@ -183,10 +220,13 @@ Rellena la sección "Backlog de Tareas" con las tareas identificadas en tu anál
 Crea la carpeta `scripts/` en la raíz.
 Copia `harness-kit-install/templates/harness-start.js.template` a `scripts/harness-start.js`
 Copia `harness-kit-install/templates/harness-finish.js.template` a `scripts/harness-finish.js`
+Copia `harness-kit-install/templates/harness-link-skills.js.template` a `scripts/harness-link-skills.js`
+Copia `harness-kit-install/templates/harness-merge-instructions.js.template` a `scripts/harness-merge-instructions.js`
+Copia `harness-kit-install/templates/harness-agents.json` a `scripts/harness-agents.json` (matriz de agentes que leen los dos scripts anteriores — déjalo junto a ellos)
 
 > Si `package.json` declara `"type": "module"`, usa extensión `.cjs` en vez de
-> `.js` para estos dos ficheros (mismo motivo que la Sección 7 explica para
-> `init.js`).
+> `.js` para estos ficheros — `harness-start`, `harness-finish`, `harness-link-skills` y
+> `harness-merge-instructions` (mismo motivo que la Sección 7 explica para `init.js`).
 
 *   **Scripts de Soporte de Graphify:**
     Copia `harness-kit-install/templates/update-graph.ps1.template` a `scripts/update-graph.ps1`
@@ -194,22 +234,23 @@ Copia `harness-kit-install/templates/harness-finish.js.template` a `scripts/harn
     Copia `harness-kit-install/templates/query-graph.ps1.template` a `scripts/query-graph.ps1`
     Copia `harness-kit-install/templates/query-graph.sh.template` a `scripts/query-graph.sh`
 
-*   **Scripts de Soporte de codebase-memory-mcp** (solo perfiles CODE y MIXTO-con-MCP):
+*   **Scripts de Soporte del motor de código** (`codebase-memory` o `codegraph`; solo perfiles CODE y MIXTO-con-MCP):
     Copia `harness-kit-install/templates/index-code.ps1.template` a `scripts/index-code.ps1`
     Copia `harness-kit-install/templates/index-code.sh.template` a `scripts/index-code.sh`
 
 ### 3.5. Instalación de los grafos de conocimiento (OBLIGATORIO)
 
-Este harness separa dos dominios: el CÓDIGO lo indexa `codebase-memory-mcp`
-y el CONOCIMIENTO (documentación + memoria del harness) lo indexa `graphify`.
+Este harness separa dos dominios: el CÓDIGO lo indexa el motor elegido en la Fase B.6.b
+(`codebase-memory-mcp` o `codegraph`) y el CONOCIMIENTO (documentación + memoria del harness) lo indexa `graphify`.
 El perfil decidido en la Fase B determina qué se instala.
 
 #### 3.5.0 — Registrar el perfil
 
 Crea `.harness/PROFILE.md` copiando
-`harness-kit-install/templates/PROFILE.md.template` y rellena: **Kit-Version (1.4.1, fijo
+`harness-kit-install/templates/PROFILE.md.template` y rellena: **Kit-Version (1.4.2, fijo
 para esta versión del kit)**, perfil (DOC/MIXTO/CODE), conteo de ficheros de
-código, fecha, y si el MCP se instala o no y por qué.
+código, fecha, **motor de código** (`codebase-memory` | `codegraph` | `none`) con su selección
+(`usuario`/`auto`) y motivo, y si el MCP se instala o no y por qué.
 
 > Este fichero NO es opcional. `init.js`/`init.sh` lo leen para saber qué
 > verificar. Sin él no se puede distinguir "el MCP no está porque el perfil es
@@ -334,7 +375,10 @@ e) Configura el versionado **selectivo** del grafo. Añade al `.gitignore`:
    reconstruir, así que viaja con el repo. `.graphify_python` y `.graphify_root`
    contienen rutas absolutas de esta máquina y **nunca** se versionan.
 
-#### 3.5.2 — codebase-memory-mcp (solo perfiles CODE y MIXTO-con-MCP)
+#### 3.5.2 — Motor de código (solo perfiles CODE y MIXTO-con-MCP)
+
+> Los pasos a–g de esta sección son para el motor **`codebase-memory`**. Si el motor elegido es
+> **`codegraph`**, salta a **3.5.2-B** (más abajo). Si es `none`, omite todo 3.5.2.
 
 a) Comprueba si el binario ya está disponible:
    ```bash
@@ -404,8 +448,59 @@ g) Verifica que el lenguaje principal se parsea de verdad:
    cobertura no está garantizada — si falla, anótalo en `.harness/PROFILE.md`
    y considera devolver ese lenguaje al grafo de graphify.
 
-> Nota: graphify es Python puro (no usa npm/pnpm) y `codebase-memory-mcp` es
-> un binario estático sin dependencias de runtime. Son independientes entre sí.
+#### 3.5.2-B — CodeGraph (solo si el motor elegido es `codegraph`)
+
+a) Comprueba si ya está disponible:
+   ```bash
+   codegraph --version
+   ```
+
+b) Si no lo está, instálalo con el gestor del proyecto (pnpm por defecto en este kit):
+   ```bash
+   pnpm add -g @colbymchenry/codegraph     # o: npm i -g @colbymchenry/codegraph
+   ```
+
+   > ⚠️ El README upstream también ofrece instaladores `curl … | sh` / `irm … | iex`
+   > (binario autocontenido, sin Node). **No los ejecutes tú**: descargan y ejecutan código
+   > remoto. Si el usuario los prefiere, que los lance él.
+   >
+   > ⛔ **NUNCA ejecutes `codegraph install`.** Autoconfigura agentes a nivel global (mismo
+   > motivo por el que se prohíbe `codebase-memory-mcp install`). Declarar el servidor en el
+   > `.mcp.json` del proyecto es todo lo necesario. Si el usuario quiere cablearlo en otros
+   > agentes, que ejecute él `codegraph install --target <agente> --yes` y revise qué cambia.
+
+c) Crea o **fusiona** `.mcp.json` en la raíz desde
+   `harness-kit-install/templates/code-graph/codegraph/mcp.json` (`command: codegraph`,
+   `args: ["serve", "--mcp"]`). Conserva los servidores existentes; nunca sobrescribas el fichero.
+   Valídalo como en 3.5.2 c).
+
+d) **Inicializa el índice UNA vez**, desde la raíz Git del proyecto (nunca en `$HOME` ni en
+   carpetas temporales):
+   ```bash
+   codegraph init .
+   ```
+   Añade `.codegraph/` al `.gitignore` del proyecto: el índice es local por máquina y por
+   worktree, y `.codegraph/.gitignore` se des-ignora a sí mismo, así que aparecería como no
+   rastreado. Si el proyecto no es un repo Git, `git init` primero, con el consentimiento del usuario.
+
+e) Pide al usuario que reinicie el agente y verifique con `/mcp` que `codegraph` aparece
+   (herramienta `codegraph_explore`).
+
+f) **Mide el coste de contexto** (`/context` antes y después) y anótalo en `.harness/PROFILE.md`.
+
+g) **PUERTA DE CALIDAD:** `codegraph status` (ficheros indexados del orden del conteo de la
+   Fase A/B; > 10× → entran dependencias, revisa la exclusión) y una consulta real con
+   `codegraph_explore` sobre un símbolo conocido del proyecto. Si el lenguaje principal no
+   se parsea, anótalo en `.harness/PROFILE.md` y valora cambiar de motor (`codebase-memory`)
+   o devolver ese lenguaje al grafo de graphify.
+
+> **Cambiar de motor más adelante:** edita el campo `Motor de código` de `.harness/PROFILE.md`,
+> deja en `.mcp.json` solo el servidor del motor nuevo, ejecuta
+> `node scripts/harness-merge-instructions.js --sync` (recompone el enrutamiento de `AGENTS.md`)
+> y `index-code`.
+
+> Nota: graphify es Python puro (no usa npm/pnpm); `codebase-memory-mcp` es un binario estático
+> sin runtime; `codegraph` se instala con npm/pnpm. Los tres son independientes entre sí.
 
 ### 4. Entorno de Agentes (.harness/)
 Crea las siguientes carpetas para la arquitectura Task-Driven:
@@ -414,7 +509,33 @@ Crea las siguientes carpetas para la arquitectura Task-Driven:
 - `.harness/rules/` (Reglas por módulo del proyecto)
 
 ### 5. Documentación y Reglas Técnicas
-Copia el fichero maestro universal `harness-kit-install/templates/AGENTS.md.template` a `AGENTS.md`.
+Genera `AGENTS.md` y los ficheros de instrucciones de cada agente con el script de fusión
+(NO copies las plantillas a mano):
+
+```bash
+node scripts/harness-merge-instructions.js --dry-run --sync --var PROJECT_NAME="<nombre>"   # ver qué haría
+node scripts/harness-merge-instructions.js --sync --agents=<tu-id> --var PROJECT_NAME="<nombre>"
+```
+
+Las partes de `AGENTS.md` que dependen del grafo de código (enrutamiento de las preguntas de
+código y su mantenimiento) se componen según el campo `Motor de código` de
+`.harness/PROFILE.md` (fuérzalo con `--var CODE_ENGINE=codegraph`).
+
+Crea `AGENTS.md` y, para cada agente detectado en el proyecto (o indicado con `--agents=`),
+su propio fichero (`CLAUDE.md`, `GEMINI.md`, `QWEN.md`…; la lista y los ids están en
+`scripts/harness-agents.json`). Cada sección que gestiona el kit va entre marcas
+`<!-- harness-kit:ID -->` … `<!-- harness-kit:ID end -->`:
+
+- El fichero **no existe** → se crea desde la plantilla.
+- El fichero **ya existe** → solo se añaden o actualizan los bloques con marcas. Todo lo demás
+  es del proyecto y no se toca (p. ej. `## Cerebro OKF` de harness-okf). Antes de modificarlo se
+  guarda copia en `.harness/backups/`.
+- Ya trae las secciones del kit **sin marcas** (instalación anterior) → el script avisa y no
+  las duplica. Enséñale el aviso al usuario y, si confirma, ejecuta de nuevo con `--adopt` para
+  envolverlas en marcas.
+- Un bloque **editado a mano** se respeta y se avisa; `--force` solo si el usuario lo pide.
+- Las marcas descuadradas o duplicadas detienen la fusión de ese fichero sin escribir nada:
+  corrígelas a mano y repite.
 Crea la carpeta `docs/` en la raíz (si no existe) y copia:
 - `harness-kit-install/templates/docs/AGENTS_REFERENCE.md.template` a `docs/AGENTS_REFERENCE.md`
 - `harness-kit-install/templates/docs/GRAPHIFY_GUIDE.md.template` a `docs/GRAPHIFY_GUIDE.md`
@@ -423,10 +544,9 @@ Crea la carpeta `docs/` en la raíz (si no existe) y copia:
   `harness-kit-install/templates/skills/doc-code-audit/SKILL.md` a
   `.claude/skills/doc-code-audit/SKILL.md` y `.agents/skills/doc-code-audit/SKILL.md`
 
-> ⚠️ **Si ya existe un AGENTS.md, docs/AGENTS_REFERENCE.md o docs/GRAPHIFY_GUIDE.md en el proyecto: FUSIONA, nunca sobrescribas.**
-> Conserva al final del AGENTS.md/docs/AGENTS_REFERENCE.md generado cualquier sección ajena al harness-kit
-> (por ejemplo "## Cerebro OKF" de harness-okf, u otras de terceros). Mismo criterio
-> con CLAUDE.md: conserva el import `@AGENTS.md` y las secciones ajenas existentes.
+> ⚠️ **Si ya existe un docs/AGENTS_REFERENCE.md, docs/GRAPHIFY_GUIDE.md o docs/KNOWLEDGE_GRAPHS.md en el proyecto: FUSIONA, nunca sobrescribas.**
+> Conserva al final del fichero generado cualquier sección ajena al harness-kit (por ejemplo
+> "## Cerebro OKF" de harness-okf, u otras de terceros). Estos tres ficheros aún no usan marcas.
 
 ### 6. Ficheros de rol de agentes (.harness/rules/)
 Para cada área identificada, crea el fichero de reglas en `.harness/rules/`:
@@ -466,9 +586,10 @@ Crea la estructura de carpetas vacías del proyecto (con .gitkeep).
 Tú (la IA que está ejecutando esta instalación) sabes qué modelo eres.
 Crea ahora la carpeta que te corresponde si no existe:
 
-- Si eres **Claude Code** → crea `.claude/` (ya debería existir; si no, créala)
-- Si eres **Gemini** → crea `.gemini/`
-- Si eres **otro modelo** → no necesitas crear nada extra
+- Crea la carpeta raíz del agente que eres, según el campo `detect` de `scripts/harness-agents.json`
+  (p. ej. `.claude/`, `.gemini/`, `.opencode/`, `.cursor/`, `.qwen/`, `.codex/`, `.kilocode/`, `.kimi-code/`).
+- Si no sabes con certeza qué agente eres, no crees nada: el script enlazará los agentes
+  que ya existan en el proyecto, y puedes forzar uno con `--agents=<id>`.
 
 Además, crea **siempre** la carpeta `.agents/` independientemente del modelo.
 Es el estándar abierto que usan OpenAI, Qwen, xAI, Llama y el resto de IAs.
@@ -477,8 +598,7 @@ Así cualquier agente futuro encontrará los skills sin configuración adicional
 ```
 Carpetas a crear (las que no existan):
   .agents/          ← SIEMPRE (estándar universal)
-  .claude/          ← solo si eres Claude Code
-  .gemini/          ← solo si eres Gemini
+  <carpeta de tu agente>   ← solo la tuya (ver harness-agents.json)
 ```
 
 **Paso 9.2 — Ejecutar el script de enlace**
@@ -490,17 +610,27 @@ y ejecútalo:
 node scripts/harness-link-skills.js
 ```
 
-El script detecta las carpetas creadas en el paso anterior y genera un symlink
-(o copia si el symlink falla) desde `.harness/skills/` hacia cada una:
+El script detecta los agentes presentes en el proyecto (la matriz está en
+`scripts/harness-agents.json`) y genera un symlink (o junction en Windows; copia si falla)
+desde `.harness/skills/` hacia la carpeta de skills nativa de cada uno:
 
-| Carpeta detectada | Skills enlazados en |
-|-------------------|---------------------|
-| `.claude/` | `.claude/skills/` |
-| `.gemini/` | `.gemini/skills/` |
-| `.agents/` | `.agents/skills/` |
+| Agente | Skills enlazados en |
+|--------|---------------------|
+| Claude Code | `.claude/skills/` |
+| Gemini CLI | `.gemini/skills/` |
+| OpenCode | `.opencode/skills/` |
+| Cursor | `.cursor/skills/` |
+| Qwen Code | `.qwen/skills/` |
+| Kilo Code | `.kilocode/skills/` |
+| Kimi Code | `.kimi-code/skills/` |
+| Codex y estándar abierto | `.agents/skills/` |
 
-> Si en el futuro el usuario añade un nuevo agente IA al proyecto,
-> basta con crear su carpeta raíz y volver a ejecutar este script.
+Opciones útiles: `--list` (qué se detecta), `--agents=cursor,qwen-code` (forzar), `--all`
+(todos), `--dry-run` (no escribe), `--copy` (copia en vez de enlace).
+
+> Si en el futuro el usuario añade un nuevo agente IA al proyecto, basta con crear su
+> carpeta raíz y volver a ejecutar `harness-link-skills.js` y
+> `harness-merge-instructions.js --sync` (este último le añade su fichero de instrucciones).
 
 ### 10. Configuración de hooks e integración con IA (opcional pero recomendado)
 
@@ -510,12 +640,17 @@ El script detecta las carpetas creadas en el paso anterior y genera un symlink
 - Sin el hook, AGENTS.md ya instruye a la IA que ejecute `node init.js` al arrancar (Paso 1 del Handshake)
 
 **Si el proyecto usa Gemini como IA principal o secundaria:**
-- Copia `harness-kit-install/templates/GEMINI.md.template` a `GEMINI.md` en la raíz
-- Adapta `{{PROJECT_NAME}}` y `{{DATE}}`
+- `GEMINI.md` ya lo creó o fusionó la Sección 5. Si Gemini se añade después:
+  `node scripts/harness-merge-instructions.js --sync --agents=gemini-cli`
 - El protocolo universal sigue siendo `AGENTS.md` — `GEMINI.md` solo añade contexto Gemini-específico
 
-**Cualquier otra IA (Cursor, Copilot, etc.):**
-- No requiere configuración adicional — el handshake está en `AGENTS.md` y es modelo-agnóstico
+**Cualquier otra IA:**
+- OpenCode, Cursor, Codex, Kilo Code y Kimi Code leen `AGENTS.md` de forma nativa: no requieren
+  fichero adicional.
+- Qwen Code (`QWEN.md`) y cualquier agente de la matriz con fichero propio: la Sección 5 le deja un
+  puntero a `AGENTS.md` entre marcas `harness-kit`.
+- Un agente que no esté en `scripts/harness-agents.json`: añade una entrada allí; el handshake
+  sigue estando en `AGENTS.md` y es modelo-agnóstico.
 
 ### 10. Capa de contexto (.harness/context/)
 

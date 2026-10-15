@@ -108,16 +108,37 @@ fi
   || check "Grafo de conocimiento generado (graphify-out/graph.json)" \
        "el grafo no se ha generado. Ejecuta /graphify. Ver prompts/01_init.md §3.5.1 paso c."
 
-# 2.c — MCP: obligatorio solo si el perfil lo requiere
-if [ "$PROFILE" = "CODE" ]; then
-  if [ -f ".mcp.json" ] && grep -q "codebase-memory" .mcp.json 2>/dev/null; then
-    check "codebase-memory declarado en .mcp.json (perfil CODE)" "ok"
+# 2.c — Motor de código (MCP): obligatorio solo si el perfil lo requiere.
+# Motor = campo "Motor de código" de PROFILE.md; sin él, codebase-memory (único motor antes de 1.4.2).
+ENGINE="codebase-memory"
+if [ -f ".harness/PROFILE.md" ]; then
+  E=$(grep -iE '^-?[[:space:]]*\*{0,2}Motor de c.{1,2}digo' .harness/PROFILE.md 2>/dev/null \
+        | grep -oE 'codebase-memory|codegraph|none' | head -1 || true)
+  [ -n "$E" ] && ENGINE="$E"
+fi
+case "$ENGINE" in
+  codegraph) ENGINE_LABEL="CodeGraph"; ENGINE_KEY="codegraph"; ENGINE_HINT="prompts/01_init.md §3.5.2-B" ;;
+  *)         ENGINE_LABEL="codebase-memory-mcp"; ENGINE_KEY="codebase-memory"; ENGINE_HINT="prompts/01_init.md §3.5.2" ;;
+esac
+
+if [ "$ENGINE" = "none" ]; then
+  echo "  ℹ️   Motor de código: ninguno — sin grafo de código por decisión del perfil"
+elif [ "$PROFILE" = "CODE" ]; then
+  if [ -f ".mcp.json" ] && grep -q "\"$ENGINE_KEY\"" .mcp.json 2>/dev/null; then
+    check "$ENGINE_LABEL declarado en .mcp.json (perfil CODE)" "ok"
   else
-    check "codebase-memory declarado en .mcp.json (perfil CODE)" \
-      "el perfil CODE requiere codebase-memory-mcp. Ver prompts/01_init.md §3.5.2."
+    check "$ENGINE_LABEL declarado en .mcp.json (perfil CODE)" \
+      "el perfil CODE requiere $ENGINE_LABEL. Ver $ENGINE_HINT."
+  fi
+  if [ "$ENGINE" = "codegraph" ]; then
+    if [ -d ".codegraph" ]; then
+      echo "  ✅  Índice de CodeGraph presente (.codegraph/)"
+    else
+      echo "  ⚠️   Falta el índice .codegraph/ — créalo una vez con: codegraph init ."
+    fi
   fi
 elif [ "$PROFILE" = "MIXTO" ]; then
-  echo "  ℹ️   Perfil MIXTO — codebase-memory-mcp es opcional (ver .harness/PROFILE.md)"
+  echo "  ℹ️   Perfil MIXTO — $ENGINE_LABEL es opcional (ver .harness/PROFILE.md)"
 elif [ "$PROFILE" = "DOC" ]; then
   echo "  ℹ️   Perfil DOC — sin MCP por diseño; graphify cubre ambos dominios"
 fi

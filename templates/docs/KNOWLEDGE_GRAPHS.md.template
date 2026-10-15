@@ -14,7 +14,28 @@
 | Se instala | Solo perfiles CODE y MIXTO-con-MCP | Siempre, en los 3 perfiles |
 | Interfaz | 15 herramientas MCP (o menos, según `--tool-profile`) | Scripts `query-graph.*` / `update-graph.*` + skill `graphify` |
 
+### Motor de código elegido
+
+El grafo de código puede indexarlo **uno** de dos motores (nunca los dos a la vez). Se elige en la
+instalación — el usuario o `auto` (decide la IA) — y queda en el campo `Motor de código` de
+`.harness/PROFILE.md`.
+
+| | `codebase-memory-mcp` | `codegraph` |
+| --- | --- | --- |
+| Qué es | binario estático (AST + resolución semántica) | CLI npm `@colbymchenry/codegraph` (índice SQLite) |
+| Índice | `~/.cache/codebase-memory-mcp/`, por máquina | `.codegraph/` en el proyecto, por máquina y worktree (en `.gitignore`) |
+| Superficie MCP | hasta 15 herramientas (`--tool-profile`) | 1 por defecto: `codegraph_explore` |
+| Fortaleza | trazado exacto de llamadas, código muerto, `detect_changes`, Cypher, `check_index_coverage` | contexto en una llamada (fuente + rutas + radio de impacto), bajo coste de contexto |
+| Sincronización | watcher + `detect_changes` | watcher (debounce ~2 s); la CLI exige `codegraph sync -q .` |
+| Servidor en `.mcp.json` | `codebase-memory` → `codebase-memory-mcp` | `codegraph` → `codegraph serve --mcp` |
+
+Para cambiar de motor: edita `Motor de código` en `.harness/PROFILE.md`, deja en `.mcp.json` solo el
+servidor nuevo, ejecuta `node scripts/harness-merge-instructions.js --sync` y `index-code`.
+
 ## 2. Enrutamiento por tipo de pregunta
+
+> La tabla de abajo es la del motor `codebase-memory`. Con `codegraph` el enrutamiento
+> equivalente está en `AGENTS.md` Paso 0.5 y en §6-bis.
 
 | Pregunta | Herramienta | Dominio |
 | --- | --- | --- |
@@ -103,6 +124,29 @@ Nunca reintroducir código como indexable en `.graphifyignore` en perfiles CODE/
 
 > **Cobertura limpia ≠ prueba de completitud.** Un resultado limpio de `check_index_coverage` significa "no hay hueco registrado", no "está probado que no falta nada". Si reporta cobertura parcial, saltada o desconocida, lee el rango real antes de responder.
 
+## 6-bis. Referencia operativa de `codegraph`
+
+**Herramientas MCP.** Por defecto solo `codegraph_explore`. Las demás (`codegraph_node`,
+`codegraph_search`, `codegraph_callers`, `codegraph_callees`, `codegraph_impact`, `codegraph_files`,
+`codegraph_status`) existen pero no se anuncian salvo que se active `CODEGRAPH_MCP_TOOLS`.
+
+**CLI de solo lectura** (cuando el MCP no está o no expone la herramienta): `codegraph status`,
+`query`, `explore`, `node`, `files`, `callers`, `callees`, `impact`, `affected`. Ver `codegraph <comando> --help`.
+
+**Ciclo de vida.** `codegraph init .` (una vez, en la raíz Git) → el watcher mantiene el índice.
+`codegraph sync -q .` antes de consultar por CLI tras editar. `codegraph index` solo para recuperar un
+índice corrupto. Nunca `uninit`, `install`, `uninstall` ni `upgrade` desde el agente.
+
+**Worktrees.** Cada worktree necesita su propio `.codegraph/`; no lo copies ni lo enlaces desde otro checkout.
+
+### Gotchas
+
+1. Un índice ausente es el disparador para inicializar, no un motivo para saltarse CodeGraph.
+2. La CLI lee el índice tal cual: sin `sync`, puede estar desactualizado.
+3. `.codegraph/.gitignore` se des-ignora a sí mismo: añade `.codegraph/` al `.gitignore` del proyecto.
+4. En WSL sobre unidades de Windows el índice puede crearse como `.codegraph-wsl/`.
+5. Inicializar exige raíz Git; nunca en `$HOME` ni carpetas temporales.
+
 ## 7. Troubleshooting
 
 | Síntoma | Causa | Solución |
@@ -113,3 +157,6 @@ Nunca reintroducir código como indexable en `.graphifyignore` en perfiles CODE/
 | `node_modules`/`.nuxt` aparecen en el índice del MCP | Se indexó la raíz en vez de las carpetas de fuentes | `delete_project` y reindexar apuntando a las carpetas concretas |
 | Comunidades sin etiquetar en más del 40% | Falta `GEMINI_API_KEY` | Relanzar `--cluster-only` con la key configurada |
 | `No module named graphify` | Intérprete mal resuelto | Revisar `graphify-out/.graphify_python` |
+| `codegraph_explore` no aparece en `/mcp` | `.mcp.json` sin la entrada `codegraph`, o falta el binario | Añadir `{"command":"codegraph","args":["serve","--mcp"]}`; comprobar `codegraph --version` |
+| `codegraph` responde con código viejo | Índice sin sincronizar (CLI) o watcher parado | `codegraph sync -q .` |
+| `.codegraph/` aparece como no rastreado en git | Su `.gitignore` interno se des-ignora a sí mismo | Añadir `.codegraph/` al `.gitignore` del proyecto |

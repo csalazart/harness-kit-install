@@ -1,6 +1,6 @@
 # Harness Engineering Kit
 > Kit reutilizable para aplicar la metodología de Arnés de Ingeniería a cualquier proyecto de software.
-> Versión: 1.4.1 | Actualizado: 2026-10-15 | [Historial de cambios](CHANGELOG_ES.md)
+> Versión: 1.4.2 | Actualizado: 2026-10-15 | [Historial de cambios](CHANGELOG_ES.md)
 
 > **Etiquetas de versión:** las etiquetas cortas que se usan en todo el kit (`v2`, `v3`,
 > `v4`, p. ej. en `prompts/07_upgrade_v3_to_v4.md`) son la misma numeración que la
@@ -23,6 +23,10 @@ gratis), y **graphify** indexa la capa de conocimiento (`.harness/`, `docs/`, `p
 Que el grafo de código se instale o no depende de un **perfil** de proyecto (DOC /
 MIXTO / CODE) calculado según el tamaño del código — ver `docs/KNOWLEDGE_GRAPHS.md`
 en un proyecto ya instalado, o `PLAN_V4_GRAFO_DUAL.md` en este repo para el diseño completo.
+
+El **motor del grafo de código** es seleccionable: `codebase-memory-mcp`, `codegraph` (alternativa) o
+`auto`, donde la IA elige el que mejor encaje con el proyecto. Solo corre uno a la vez; la elección
+queda registrada en `.harness/PROFILE.md`.
 
 ### Proyecto hermano: harness-okf
 
@@ -87,7 +91,11 @@ harness-kit-install/
 │   ├── init.sh.template                   ← Alternativa Bash pura de init.js
 │   ├── harness-start.js.template          ← Crea un workspace de tarea
 │   ├── harness-finish.js.template         ← Archiva y cierra un workspace
-│   ├── harness-link-skills.js.template    ← Enlaza los skills al agente IA activo
+│   ├── harness-link-skills.js.template    ← Enlaza .harness/skills/ en cada agente detectado (.claude, .gemini, .opencode, .cursor, .qwen, .kilocode, .kimi-code, .agents)
+│   ├── harness-merge-instructions.js.template ← Fusiona las secciones del kit en AGENTS.md / CLAUDE.md / GEMINI.md / … con marcas <!-- harness-kit:ID -->, sin pisar lo del proyecto
+│   ├── harness-agents.json                ← Matriz de agentes (rutas, detección, ficheros de instrucciones) que leen ambos scripts
+│   ├── AGENT_POINTER.md.template          ← Fichero "lee AGENTS.md primero" para agentes con fichero propio (QWEN.md…)
+│   ├── code-graph/                        ← Fragmentos por motor de código (codebase-memory | codegraph | none): enrutamiento de AGENTS.md, mantenimiento, entrada de .mcp.json
 │   ├── query-graph.ps1/sh.template        ← Consulta el grafo de conocimiento (graphify)
 │   ├── update-graph.ps1/sh.template       ← Reconstruye el grafo de conocimiento (graphify)
 │   ├── index-code.ps1/sh.template         ← Reindexa el grafo de código (codebase-memory-mcp, v4)
@@ -163,5 +171,7 @@ harness-kit-install/
 
 Diseñado para funcionar con:
 - **Claude Code** (CLI de Anthropic) — uso principal
-- **Cursor** — compatible con `.cursorrules`
+- **Gemini CLI**, **OpenCode**, **Cursor**, **Codex**, **Qwen Code**, **Kilo Code**, **Kimi Code** —
+  los skills se enlazan en la carpeta nativa de cada agente y los ficheros de instrucciones se
+  fusionan con marcas `<!-- harness-kit:ID -->` (matriz de agentes: `templates/harness-agents.json`)
 - **Cualquier LLM** con acceso a ficheros — usando los prompts manualmente

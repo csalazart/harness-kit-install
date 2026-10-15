@@ -4,11 +4,15 @@
 
 ---
 
+<!-- harness-kit:agents-import -->
 @AGENTS.md
+<!-- harness-kit:agents-import end -->
 
+<!-- harness-kit:startup -->
 ## ⚡ ARRANQUE OBLIGATORIO — Leer esto primero
 
 > Ejecutar esta secuencia ANTES de responder al usuario. El modo de operación (PLAN/ACT/TUTOR) y sus reglas están definidos en `AGENTS.md` — ver sección "Modo de operación".
+<!-- harness-kit:startup end -->
 
 ---
 

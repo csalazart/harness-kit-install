@@ -1,13 +1,43 @@
-# index-code.ps1 — Reindexado del grafo de CÓDIGO (codebase-memory-mcp)
+# index-code.ps1 — Reindexado del grafo de CÓDIGO (codebase-memory-mcp | codegraph)
 # Generado por harness-kit · Proyecto: {{PROJECT_NAME}}
 #
 # Solo aplica a perfiles CODE y MIXTO-con-MCP (ver .harness/PROFILE.md).
-# Usa el modo CLI one-shot de codebase-memory-mcp — nunca arranca el daemon,
-# apto para scripts y hooks. Usa flags, nunca JSON crudo (deprecado).
+# El motor sale del campo "Motor de código" de PROFILE.md (por defecto codebase-memory).
+# - codebase-memory: modo CLI one-shot — nunca arranca el daemon, apto para scripts y
+#   hooks. Usa flags, nunca JSON crudo (deprecado).
+# - codegraph: `codegraph init .` si no hay índice, `codegraph sync -q .` si ya existe.
 #
 # USO: .\scripts\index-code.ps1
 
 $ErrorActionPreference = "Stop"
+
+$engine = "codebase-memory"
+if (Test-Path ".harness/PROFILE.md") {
+    $line = Select-String -Path ".harness/PROFILE.md" -Pattern "^-?\s*\*{0,2}Motor de c.digo" | Select-Object -First 1
+    if ($line -and $line.Line -match "(codebase-memory|codegraph|none)") { $engine = $Matches[1] }
+}
+
+if ($engine -eq "none") {
+    Write-Host "El perfil no instala motor de código (Motor de código: none). Nada que indexar."
+    exit 0
+}
+
+if ($engine -eq "codegraph") {
+    if (-not (Get-Command codegraph -ErrorAction SilentlyContinue)) {
+        Write-Host "codegraph no está en el PATH. Ver docs/KNOWLEDGE_GRAPHS.md." -ForegroundColor Red
+        exit 1
+    }
+    if (-not (Test-Path ".codegraph")) {
+        Write-Host "Creando el índice de CodeGraph (primera vez)..." -ForegroundColor Cyan
+        codegraph init .
+    } else {
+        Write-Host "Sincronizando el índice de CodeGraph..." -ForegroundColor Cyan
+        codegraph sync -q .
+    }
+    Write-Host "Estado del índice:" -ForegroundColor Cyan
+    codegraph status
+    exit 0
+}
 
 if (-not (Get-Command codebase-memory-mcp -ErrorAction SilentlyContinue)) {
     Write-Host "codebase-memory-mcp no está en el PATH. Ver docs/KNOWLEDGE_GRAPHS.md." -ForegroundColor Red

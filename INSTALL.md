@@ -94,7 +94,9 @@ mi-proyecto/
 ├── scripts/
 │   ├── harness-start.js   ← crea una zona de trabajo por tarea
 │   ├── harness-finish.js  ← archiva y cierra la zona de trabajo
-│   └── harness-link-skills.js  ← enlaza los skills al agente activo
+│   ├── harness-link-skills.js  ← enlaza los skills a cada agente IA detectado
+│   ├── harness-merge-instructions.js ← fusiona AGENTS.md/CLAUDE.md/… con marcas, sin pisar tu contenido
+│   └── harness-agents.json ← matriz de agentes IA soportados
 │
 ├── .harness/
 │   ├── STATE.md           ← tu lista de tareas y decisiones (fuente de verdad)
@@ -187,6 +189,11 @@ Si tiene mucho código (perfil CODE) se instala siempre; en el rango intermedio
 `.harness/PROFILE.md`, y `docs/KNOWLEDGE_GRAPHS.md` explica el enrutamiento entre
 ambos grafos con más detalle.
 
+**¿Puedo usar `codegraph` en lugar de `codebase-memory-mcp`?**
+Sí: el motor del grafo de código es seleccionable. Durante la instalación el agente te
+pregunta si prefieres `codebase-memory`, `codegraph` o `auto` (decide él con criterios
+explícitos y te lo explica). Solo se instala uno; queda en `.harness/PROFILE.md`.
+
 **¿Por qué mi proyecto no tiene `codebase-memory-mcp` instalado?**
 Porque tu perfil es DOC (poco código, o un proyecto de infraestructura/configuración
 sin lógica de aplicación que un LSP pueda resolver), o porque tu perfil es MIXTO y
@@ -196,4 +203,4 @@ para ver el motivo registrado.
 
 ---
 
-> Kit versión 1.4.1 · Para más detalles técnicos ver `QUICKSTART.md`
+> Kit versión 1.4.2 · Para más detalles técnicos ver `QUICKSTART.md`
