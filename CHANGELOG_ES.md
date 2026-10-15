@@ -17,13 +17,26 @@ proyecto usa un versionado inspirado en [Semantic Versioning](https://semver.org
 > este archivo en cada sincronización desde `harness-kit`, en vez de tocar solo la línea
 > `Version:` del README.
 >
-> Independientemente de la versión del kit, el proyecto también usa etiquetas internas de
-> **generación de arquitectura** (v1/v2/v3/v4) en nombres de fichero como
-> `prompts/07_upgrade_v3_to_v4.md`. Corresponden aproximadamente a `1.2.0` (v2, Lean),
-> `1.3.0` (v3, graphify) y `1.4.0` (v4, grafo dual) más abajo, pero son un eje distinto —
-> no confundas un "upgrade v3→v4" con "kit 1.3.0→1.4.0".
+> **Etiquetas cortas = versiones del kit.** Los nombres de fichero y la documentación
+> también usan las etiquetas cortas **v1/v2/v3/v4** (p. ej.
+> `prompts/07_upgrade_v3_to_v4.md`). Son anteriores a la numeración `1.x` pero son las
+> mismas líneas de trabajo, así que se corresponden una a una:
+>
+> | Etiqueta | Versión del kit | Qué es |
+> |---|---|---|
+> | v1 | 1.0 | Release inicial (agentes, logs asíncronos, `git-reviewer`) — no existe la 1.1 |
+> | v2 | 1.2 | Arquitectura Lean por workspaces |
+> | v3 | 1.3 | graphify + memoria contextual |
+> | v4 | 1.4 | Grafo dual de conocimiento |
+>
+> Por tanto un "upgrade v3→v4" es un "upgrade 1.3→1.4". Los ficheros conservan la
+> etiqueta corta para no romper enlaces ni proyectos ya instalados.
 
 ## [Unreleased]
+
+### Cambiado
+- Documentado que las etiquetas cortas `v1`–`v4` son las versiones del kit
+  (v3 = 1.3, v4 = 1.4); el README y el prompt 07 lo indican.
 
 ## [1.4.0] - 2026-09-08
 

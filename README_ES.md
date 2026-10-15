@@ -2,6 +2,11 @@
 > Kit reutilizable para aplicar la metodología de Arnés de Ingeniería a cualquier proyecto de software.
 > Versión: 1.4.0 | Actualizado: 2026-09-06 | [Historial de cambios](CHANGELOG_ES.md)
 
+> **Etiquetas de versión:** las etiquetas cortas que se usan en todo el kit (`v2`, `v3`,
+> `v4`, p. ej. en `prompts/07_upgrade_v3_to_v4.md`) son la misma numeración que la
+> versión del kit: **v2 = 1.2, v3 = 1.3, v4 = 1.4**. Donde leas "v4", lee "1.4" — un
+> "upgrade v3→v4" es un "upgrade 1.3→1.4". Detalle en el [Historial de cambios](CHANGELOG_ES.md).
+
 ---
 
 ## ¿Qué es este kit?

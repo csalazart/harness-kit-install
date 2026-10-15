@@ -2,6 +2,11 @@
 > Reusable kit to apply the Engineering Harness methodology to any software project.
 > Version: 1.4.0 | Updated: 2026-09-06 | [Changelog](CHANGELOG.md)
 
+> **Version labels:** the short labels used across this kit (`v2`, `v3`, `v4`, e.g. in
+> `prompts/07_upgrade_v3_to_v4.md`) are the same numbering as the kit version: **v2 = 1.2,
+> v3 = 1.3, v4 = 1.4**. Wherever you read "v4", read "1.4" — a "v3→v4 upgrade" is a
+> "1.3→1.4 upgrade". Details in the [Changelog](CHANGELOG.md).
+
 ---
 
 ## What is this kit?

@@ -4,6 +4,9 @@
 > harness-okf) y quiere pasar a **v4** (grafo dual: `codebase-memory-mcp` para código +
 > graphify para conocimiento).
 >
+> **Equivalencia de versiones:** v3 = kit 1.3 y v4 = kit 1.4. Este prompt es el
+> upgrade 1.3 → 1.4 (ver `CHANGELOG_ES.md`).
+>
 > **No uses `01_init.md` para este caso.** `01_init.md` asume terreno virgen o completa
 > lo que falte sin más — no sabe distinguir "proyecto nuevo" de "proyecto con v3 ya
 > funcionando cuyo backlog y decisiones no se pueden perder". Este prompt sí.

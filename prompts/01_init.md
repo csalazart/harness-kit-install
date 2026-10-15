@@ -26,12 +26,12 @@ Sigue este orden:
       `Kit-Version` es menor que la de este prompt (1.4.0), este proyecto
       necesita un upgrade dirigido, no una instalación nueva — detente y dilo
       (el mecanismo concreto depende de qué versión declare; hoy solo existe
-      el camino v3→v4 documentado abajo). Si `PROFILE.md` no existe todavía,
+      el camino v3→v4 (1.3→1.4) documentado abajo). Si `PROFILE.md` no existe todavía,
       no hay sello que leer — usa los heurísticos de abajo, que son los que
       cubren toda instalación anterior a que este campo empezara a existir.
       Reporta cuál de estos casos aplica antes de continuar:
       - Ninguno existe → caso dominante, instalación desde cero.
-      - `.harness/` existe sin `PROFILE.md` → instalación del kit v3. **No
+      - `.harness/` existe sin `PROFILE.md` → instalación del kit v3 (1.3). **No
         continúes con este prompt.** Dilo explícitamente y ofrece ejecutar
         `prompts/07_upgrade_v3_to_v4.md` en su lugar — ese prompt extrae y
         respalda el `STATE.md`/`context/`/`rules/`/`llm-wiki/` existentes

@@ -15,13 +15,25 @@ and this project uses a versioning scheme inspired by [Semantic Versioning](http
 > needed no change. Going forward, bump this file on every sync from `harness-kit` instead
 > of only the `Version:` line in the README.
 >
-> Independently of the kit version, the project also uses internal **architecture
-> generation** labels (v1/v2/v3/v4) in filenames like `prompts/07_upgrade_v3_to_v4.md`.
-> Those map roughly to `1.2.0` (v2, Lean), `1.3.0` (v3, graphify) and `1.4.0` (v4, dual
-> graph) below, but are a separate axis — don't confuse a "v3→v4 upgrade" with
-> "kit 1.3.0→1.4.0".
+> **Short labels = kit versions.** Filenames and docs also use the short labels
+> **v1/v2/v3/v4** (e.g. `prompts/07_upgrade_v3_to_v4.md`). They predate the `1.x`
+> numbering but are the same lines of work, so they map one-to-one:
+>
+> | Label | Kit version | What it is |
+> |---|---|---|
+> | v1 | 1.0 | Initial release (agents, async logs, `git-reviewer`) — there is no 1.1 |
+> | v2 | 1.2 | Lean workspace architecture |
+> | v3 | 1.3 | graphify + contextual memory |
+> | v4 | 1.4 | Dual knowledge graph |
+>
+> So a "v3→v4 upgrade" is a "1.3→1.4 upgrade". Filenames keep the short label so that
+> existing links and already-installed projects keep working.
 
 ## [Unreleased]
+
+### Changed
+- Documented that the short `v1`–`v4` labels are the kit versions
+  (v3 = 1.3, v4 = 1.4); README and prompt 07 now say so.
 
 ## [1.4.0] - 2026-09-08
 
