@@ -1,6 +1,6 @@
 # Harness Engineering Kit
 > Kit reutilizable para aplicar la metodología de Arnés de Ingeniería a cualquier proyecto de software.
-> Versión: 1.4.0 | Actualizado: 2026-09-06 | [Historial de cambios](CHANGELOG_ES.md)
+> Versión: 1.4.1 | Actualizado: 2026-10-15 | [Historial de cambios](CHANGELOG_ES.md)
 
 > **Etiquetas de versión:** las etiquetas cortas que se usan en todo el kit (`v2`, `v3`,
 > `v4`, p. ej. en `prompts/07_upgrade_v3_to_v4.md`) son la misma numeración que la

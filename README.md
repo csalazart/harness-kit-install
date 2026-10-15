@@ -1,6 +1,6 @@
 # Harness Engineering Kit
 > Reusable kit to apply the Engineering Harness methodology to any software project.
-> Version: 1.4.0 | Updated: 2026-09-06 | [Changelog](CHANGELOG.md)
+> Version: 1.4.1 | Updated: 2026-10-15 | [Changelog](CHANGELOG.md)
 
 > **Version labels:** the short labels used across this kit (`v2`, `v3`, `v4`, e.g. in
 > `prompts/07_upgrade_v3_to_v4.md`) are the same numbering as the kit version: **v2 = 1.2,

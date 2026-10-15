@@ -31,9 +31,20 @@ and this project uses a versioning scheme inspired by [Semantic Versioning](http
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-10-15
+
+Documentation and version-stamp patch release. No structural changes to the kit:
+projects installed with 1.4.0 keep working and need no upgrade.
+
 ### Changed
-- Documented that the short `v1`–`v4` labels are the kit versions
-  (v3 = 1.3, v4 = 1.4); README and prompt 07 now say so.
+- Documented that the short `v1`–`v4` labels are the kit versions (v2 = 1.2, v3 = 1.3,
+  v4 = 1.4); the README, this changelog and prompt 07 now say so.
+- `Kit-Version` stamp bumped to `1.4.1` in `templates/PROFILE.md.template`,
+  `prompts/01_init.md` and `prompts/07_upgrade_v3_to_v4.md`.
+- `prompts/01_init.md`: the "needs a targeted upgrade" check now compares against
+  `1.4.0` (the first dual-graph release) explicitly, so a `1.4.x` patch never triggers
+  an upgrade.
+- Version banner updated to 1.4.1 in `README.md`, `README_ES.md` and `INSTALL.md`.
 
 ## [1.4.0] - 2026-09-08
 

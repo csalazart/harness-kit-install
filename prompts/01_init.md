@@ -23,7 +23,8 @@ Sigue este orden:
       `graphify-out/`, `.mcp.json`, `.harness/PROFILE.md`. **Si `PROFILE.md`
       existe, lee su campo `Kit-Version` primero — es la fuente de verdad
       explícita, no adivines la versión por qué ficheros hay o faltan.** Si
-      `Kit-Version` es menor que la de este prompt (1.4.0), este proyecto
+      `Kit-Version` es menor que 1.4.0 (primer release con grafo dual; los parches
+      1.4.x no requieren upgrade), este proyecto
       necesita un upgrade dirigido, no una instalación nueva — detente y dilo
       (el mecanismo concreto depende de qué versión declare; hoy solo existe
       el camino v3→v4 (1.3→1.4) documentado abajo). Si `PROFILE.md` no existe todavía,
@@ -206,7 +207,7 @@ El perfil decidido en la Fase B determina qué se instala.
 #### 3.5.0 — Registrar el perfil
 
 Crea `.harness/PROFILE.md` copiando
-`harness-kit-install/templates/PROFILE.md.template` y rellena: **Kit-Version (1.4.0, fijo
+`harness-kit-install/templates/PROFILE.md.template` y rellena: **Kit-Version (1.4.1, fijo
 para esta versión del kit)**, perfil (DOC/MIXTO/CODE), conteo de ficheros de
 código, fecha, y si el MCP se instala o no y por qué.
 

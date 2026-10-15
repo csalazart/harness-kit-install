@@ -4,7 +4,7 @@
 > sin él no se puede distinguir "el MCP no está porque el perfil es DOC" de
 > "el MCP no está porque la instalación falló".
 
-- **Kit-Version:** 1.4.0
+- **Kit-Version:** 1.4.1
   (versión del harness-kit instalada — la lee cualquier futuro prompt de
   actualización para saber de qué versión parte, en vez de adivinarlo por
   ausencia/presencia de ficheros)

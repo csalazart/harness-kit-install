@@ -34,9 +34,20 @@ proyecto usa un versionado inspirado en [Semantic Versioning](https://semver.org
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-10-15
+
+Release de parche de documentación y sello de versión. Sin cambios estructurales en el
+kit: los proyectos instalados con 1.4.0 siguen funcionando y no necesitan upgrade.
+
 ### Cambiado
-- Documentado que las etiquetas cortas `v1`–`v4` son las versiones del kit
-  (v3 = 1.3, v4 = 1.4); el README y el prompt 07 lo indican.
+- Documentado que las etiquetas cortas `v1`–`v4` son las versiones del kit (v2 = 1.2,
+  v3 = 1.3, v4 = 1.4); el README, este changelog y el prompt 07 lo indican.
+- Sello `Kit-Version` actualizado a `1.4.1` en `templates/PROFILE.md.template`,
+  `prompts/01_init.md` y `prompts/07_upgrade_v3_to_v4.md`.
+- `prompts/01_init.md`: la comprobación de "necesita upgrade dirigido" compara ahora
+  explícitamente contra `1.4.0` (el primer release con grafo dual), de modo que un parche
+  `1.4.x` nunca dispare un upgrade.
+- Banner de versión actualizado a 1.4.1 en `README.md`, `README_ES.md` e `INSTALL.md`.
 
 ## [1.4.0] - 2026-09-08
 

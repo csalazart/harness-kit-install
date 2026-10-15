@@ -224,7 +224,7 @@ PLAN DE ACTUALIZACIÓN v3 → v4
      como si fuera la primera vez que el proyecto se plantea la pregunta.
    - `.graphifyignore` nuevo, compuesto en 3 capas.
    - `.harness/PROFILE.md`: crear con el perfilado de este paso (incluye
-     `Kit-Version: 1.4.0` — ver `templates/PROFILE.md.template`).
+     `Kit-Version: 1.4.1` — ver `templates/PROFILE.md.template`).
    - `/graphify` para reconstruir `graphify-out/` desde cero.
    - Si el perfil lo requiere: `codebase-memory-mcp` (§3.5.2 de `01_init.md`).
 

@@ -196,4 +196,4 @@ para ver el motivo registrado.
 
 ---
 
-> Kit versión 1.4.0 · Para más detalles técnicos ver `QUICKSTART.md`
+> Kit versión 1.4.1 · Para más detalles técnicos ver `QUICKSTART.md`
