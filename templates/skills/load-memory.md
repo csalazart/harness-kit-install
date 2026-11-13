@@ -28,7 +28,7 @@ Contexto cargado: [proyecto] | Rama: [rama] | Próximo: [próximo paso] | Bloque
 ## NIVEL 1.5 — MAPA DEL PROYECTO (Bajo Demanda)
 
 Si necesitas orientarte sobre la organización de los ficheros, dependencias, o buscar clases/funciones dentro del código:
-- **Búsqueda Quirúrgica y Precisa:** Ejecuta directamente el comando CLI `graphify query "<pregunta>"` para consultar el grafo de conocimiento de forma enfocada y bajo demanda. Evita escanear directorios o leer archivos de reporte intermedios.
+- **Búsqueda Quirúrgica y Precisa:** código → motor de código del proyecto (ver `AGENTS.md` Paso 0.5); conocimiento → `.harness/context/index.md`, el cerebro OKF si existe (`.harness/llm-wiki/index.md`) y Grep/Read. Evita escanear directorios enteros.
 
 ---
 

@@ -20,11 +20,11 @@ Sigue este orden:
    funcionar bien en terreno virgen, no solo detectar instalaciones ya hechas.
 
    a) **Detección de estado previo** — comprueba si ya existen `.harness/`,
-      `graphify-out/`, `.mcp.json`, `.harness/PROFILE.md`. **Si `PROFILE.md`
+      `.mcp.json`, `.harness/PROFILE.md`. **Si `PROFILE.md`
       existe, lee su campo `Kit-Version` primero — es la fuente de verdad
       explícita, no adivines la versión por qué ficheros hay o faltan.** Si
-      `Kit-Version` es menor que 1.4.0 (primer release con grafo dual; los parches
-      1.4.x no requieren upgrade), este proyecto
+      `Kit-Version` es menor que 1.4.0 (primer release con `PROFILE.md` y
+      perfilado; las versiones 1.4.x y posteriores no requieren upgrade), este proyecto
       necesita un upgrade dirigido, no una instalación nueva — detente y dilo
       (el mecanismo concreto depende de qué versión declare; hoy solo existe
       el camino v3→v4 (1.3→1.4) documentado abajo). Si `PROFILE.md` no existe todavía,
@@ -38,8 +38,11 @@ Sigue este orden:
         respalda el `STATE.md`/`context/`/`rules/`/`llm-wiki/` existentes
         antes de tocar nada, cosa que este prompt (`01_init.md`) no hace. No
         asumas que puedes sobrescribir la instalación v3.
-      - `graphify-out/` existe sin `.harness/` → grafo huérfano de un uso suelto
-        de graphify, se puede reconstruir sin conflicto.
+      - Hay artefactos de un grafo de conocimiento de versiones anteriores del
+        kit (carpeta de salida del grafo, su fichero de exclusiones, scripts de
+        consulta/actualización) → ya no forman parte del kit. Repórtalos y
+        pregunta al usuario si los conserva (puede usar esa herramienta por su
+        cuenta) o los elimina; no los integres en la instalación.
       - **Ecosistema equivalente bajo otro nombre o nivel** — no te fíes solo de
         los nombres exactos de arriba. Busca también: `.agent/` (u otra carpeta
         de convención distinta) con su propio `init.js`, `AGENTS.md`/`CLAUDE.md`/
@@ -62,11 +65,9 @@ Sigue este orden:
 
       **Excluye también la fontanería del propio harness** si el proyecto ya
       tiene una instalación previa (caso "`.harness/` existe sin `PROFILE.md`"
-      del punto 0.a): `scripts/harness-*`, `scripts/index-code.*`,
-      `scripts/query-graph.*`, `scripts/update-graph.*`, `init.js`, `init.cjs`,
-      `init.sh`, `.harness/scripts/`. Son plantillas del kit, no código del
-      proyecto — igual que ya las excluye `.graphifyignore.base.template`
-      (Bloque A.5). Sin esta exclusión, cualquier proyecto con el kit ya
+      del punto 0.a): `scripts/harness-*`, `scripts/index-code.*`, `init.js`,
+      `init.cjs`, `init.sh`, `.harness/scripts/`. Son plantillas del kit, no
+      código del proyecto. Sin esta exclusión, cualquier proyecto con el kit ya
       instalado infla su propio conteo con sus scripts de arranque/cierre y
       puede saltar de perfil sin que el código real del proyecto haya cambiado.
 
@@ -84,15 +85,14 @@ Sigue este orden:
 
       Si detectas esta situación, **no la excluyas en silencio ni la cuentes
       sin más**: muestra ambos conteos (bruto y sin esa carpeta) y pregunta al
-      usuario si es código propio o material de referencia — el mismo criterio
-      de "carpeta ambigua" que ya aplica el Bloque C de 3.5.1.b, pero aquí
-      importa antes, porque puede cambiar el perfil resultante.
+      usuario si es código propio o material de referencia — importa, porque
+      puede cambiar el perfil resultante.
 
    c) **Medición de documentación existente** — cuenta los `.md` fuera de las
       carpetas excluidas, y si hay `docs/`, wikis o carpetas de planes ya
-      pobladas. No decide el perfil, pero informa cuánto costará en tokens el
-      primer build de graphify (referencia ya medida: ~44.677 tokens para
-      38.787 palabras) — para que la confirmación de la Fase B sea informada.
+      pobladas. No decide el perfil: sirve para saber qué conocimiento tiene
+      ya el proyecto y qué conviene reflejar en `.harness/context/` (o, si el
+      usuario lo instala, en el cerebro OKF).
 
    d) **Caso infraestructura** — si el conteo de código de aplicación es bajo
       pero predomina contenido de infraestructura/configuración
@@ -139,16 +139,20 @@ Una vez que tengas suficiente contexto, produce:
 4. Las decisiones críticas pendientes que bloquean el avance
 5. Las brechas que tiene el proyecto para poder usar Harness
 
-6. **Perfilado del proyecto (determina qué grafos se instalan):**
+6. **Perfilado del proyecto (determina el motor de código):**
 
    Usa el conteo automático de la Fase A punto 0.b (ficheros de código,
    excluyendo dependencias, build y generados).
 
-   | Ficheros de código | Perfil | Grafos a instalar |
+   | Ficheros de código | Perfil | Motor de código |
    | --- | --- | --- |
-   | 0 – 20 (o predomina infraestructura/configuración, ver 0.d) | **DOC**   | graphify (conocimiento + código) |
-   | 21 – 100  | **MIXTO** | graphify (conocimiento) + MCP opcional |
-   | > 100     | **CODE**  | graphify (conocimiento) + MCP |
+   | 0 – 20 (o predomina infraestructura/configuración, ver 0.d) | **DOC**   | ninguno (`none`): el código se lee directamente con Grep/Read |
+   | 21 – 100  | **MIXTO** | opcional (`codebase-memory` o `codegraph`, vía MCP) |
+   | > 100     | **CODE**  | obligatorio (`codebase-memory` o `codegraph`, vía MCP) |
+
+   El conocimiento (documentación, `.harness/`, `docs/`, `plan/`) no se indexa en
+   ningún perfil: se consulta con `.harness/context/index.md`, el cerebro OKF si
+   está instalado (harness-okf, opcional) y Grep/Read.
 
    Muestra el conteo, el perfil propuesto y el desglose por extensión.
    **Espera confirmación del usuario** — puede corregir el perfil si conoce
@@ -228,26 +232,26 @@ Copia `harness-kit-install/templates/harness-agents.json` a `scripts/harness-age
 > `.js` para estos ficheros — `harness-start`, `harness-finish`, `harness-link-skills` y
 > `harness-merge-instructions` (mismo motivo que la Sección 7 explica para `init.js`).
 
-*   **Scripts de Soporte de Graphify:**
-    Copia `harness-kit-install/templates/update-graph.ps1.template` a `scripts/update-graph.ps1`
-    Copia `harness-kit-install/templates/update-graph.sh.template` a `scripts/update-graph.sh`
-    Copia `harness-kit-install/templates/query-graph.ps1.template` a `scripts/query-graph.ps1`
-    Copia `harness-kit-install/templates/query-graph.sh.template` a `scripts/query-graph.sh`
-
 *   **Scripts de Soporte del motor de código** (`codebase-memory` o `codegraph`; solo perfiles CODE y MIXTO-con-MCP):
     Copia `harness-kit-install/templates/index-code.ps1.template` a `scripts/index-code.ps1`
     Copia `harness-kit-install/templates/index-code.sh.template` a `scripts/index-code.sh`
 
-### 3.5. Instalación de los grafos de conocimiento (OBLIGATORIO)
+### 3.5. Instalación del motor de código (según perfil)
 
-Este harness separa dos dominios: el CÓDIGO lo indexa el motor elegido en la Fase B.6.b
-(`codebase-memory-mcp` o `codegraph`) y el CONOCIMIENTO (documentación + memoria del harness) lo indexa `graphify`.
-El perfil decidido en la Fase B determina qué se instala.
+Este harness separa dos dominios. El CÓDIGO lo indexa el motor elegido en la Fase B.6.b
+(`codebase-memory-mcp` o `codegraph`) en los perfiles CODE y MIXTO-con-MCP; en DOC no hay
+motor y el código se lee directamente con Grep/Read. El CONOCIMIENTO (documentación + memoria
+del harness) no se indexa: se consulta con `.harness/context/index.md`, el cerebro OKF si está
+instalado (harness-okf) y Grep/Read. El perfil decidido en la Fase B determina qué se instala;
+el paso 3.5.0 es obligatorio en todos los perfiles.
+
+> La numeración salta de 3.5.0 a 3.5.2 a propósito: otros documentos del kit citan
+> §3.5.2 y §3.5.2-B.
 
 #### 3.5.0 — Registrar el perfil
 
 Crea `.harness/PROFILE.md` copiando
-`harness-kit-install/templates/PROFILE.md.template` y rellena: **Kit-Version (1.4.2, fijo
+`harness-kit-install/templates/PROFILE.md.template` y rellena: **Kit-Version (1.5.0, fijo
 para esta versión del kit)**, perfil (DOC/MIXTO/CODE), conteo de ficheros de
 código, fecha, **motor de código** (`codebase-memory` | `codegraph` | `none`) con su selección
 (`usuario`/`auto`) y motivo, y si el MCP se instala o no y por qué.
@@ -255,125 +259,6 @@ código, fecha, **motor de código** (`codebase-memory` | `codegraph` | `none`) 
 > Este fichero NO es opcional. `init.js`/`init.sh` lo leen para saber qué
 > verificar. Sin él no se puede distinguir "el MCP no está porque el perfil es
 > DOC" de "el MCP no está porque la instalación falló".
-
-#### 3.5.1 — Graphify (SIEMPRE, en los tres perfiles)
-
-**Requisito previo: Python 3.10+.** Ver `docs/GRAPHIFY_GUIDE.md`.
-
-```bash
-python --version
-```
-
-Si no lo tienes:
-- Descárgalo desde [python.org](https://www.python.org/downloads/) (versión LTS)
-- O usa `winget install Python.Python.3.12` (Windows)
-- O `brew install python` (Mac)
-
-a) Copia el skill:
-   ```
-   harness-kit-install/templates/skills/graphify/ → .claude/skills/graphify/
-   harness-kit-install/templates/skills/graphify/ → .agents/skills/graphify/
-   ```
-
-b) **Compón** el `.graphifyignore` en tres capas — **NO** es una copia
-   directa de plantilla:
-
-   **B.1 — Núcleo.** Copia `harness-kit-install/templates/.graphifyignore.base.template`
-   tal cual a `.graphifyignore`. **No lo edites**: contiene los secretos, la
-   salida del grafo, la memoria volátil y la fontanería. Ninguna de esas
-   reglas depende del proyecto.
-
-   **B.2 — Fragmentos del stack.** Del stack detectado en la Fase A, copia bajo
-   el BLOQUE B los fragmentos que correspondan de
-   `harness-kit-install/graphifyignore-library/`, cada uno precedido de
-   `# ── de graphifyignore-library/<fichero>` para que su origen quede
-   trazable.
-   - Perfil **CODE**: incluye `_code-sources.txt` y quédate solo con las
-     extensiones de los lenguajes que el proyecto usa realmente — el MCP
-     se instala siempre en este perfil (3.5.2), así que excluir el código de
-     graphify no lo deja sin cobertura.
-   - Perfil **DOC**: **omite `_code-sources.txt`** — con menos de 20 ficheros de
-     código (o siendo un proyecto de infraestructura), el mismo grafo cubre
-     ambos dominios y no hay MCP que tome el relevo.
-   - Perfil **MIXTO**: **omite `_code-sources.txt` por defecto.** En este
-     perfil el MCP es opcional y su instalación se decide en 3.5.2, *después*
-     de este paso — si aquí ya excluyeras el código de graphify "por si acaso"
-     se instala el MCP, y luego se decide que no, el código quedaría sin
-     cobertura en ningún grafo (bug real, detectado simulando este caso en dos
-     proyectos reales). Deja que graphify cubra el código como opción segura
-     por defecto. Si 3.5.2 termina instalando el MCP, vuelve aquí, añade
-     `_code-sources.txt` al Bloque B y reconstruye graphify — no antes.
-   - **Caso infraestructura (Fase A punto 0.d):** si el perfil DOC se propuso
-     porque el proyecto es de infraestructura/configuración, **no copies
-     fragmentos que excluyan sus propios manifiestos** — en particular, **no**
-     copies `docker.txt` si el proyecto es principalmente `docker-compose.yml`/
-     `Dockerfile` de gestión (eso excluiría justo el contenido que el punto
-     0.d acaba de declarar como la sustancia real a indexar). El criterio es:
-     un fragmento del Bloque B nunca debe excluir lo que la Fase A ya
-     identificó como conocimiento del proyecto, aunque ese fragmento exista
-     para otros stacks donde ese mismo patrón sí es ruido (p. ej. un
-     `docker-compose.yml` de desarrollo en un proyecto de aplicación normal).
-
-   **B.3 — Reglas propias.** Recorre las carpetas de primer nivel no cubiertas
-   por A y B y clasifícalas:
-
-   | Situación | Acción |
-   | --- | --- |
-   | Assets, datos generados, multimedia | excluir |
-   | Documentación, planes, specs, decisiones | **NO excluir** |
-   | Ambigua (nombre poco claro o contenido mixto) | **PREGUNTAR al usuario** |
-
-   Para cada carpeta ambigua muestra nombre, nº de ficheros, extensiones
-   predominantes y una línea de qué parece contener; pregunta si es conocimiento
-   del proyecto o material auxiliar.
-
-   Con los ficheros de texto plano grandes de la raíz (`*.txt`, `*.md` sueltos):
-   **nunca los excluyas por tamaño**. Un `.txt` de 20 KB puede ser ruido o puede
-   ser la especificación funcional del producto. Pregunta siempre.
-
-   Cada regla del BLOQUE C lleva un comentario con su motivo, **incluidas las
-   decisiones de NO excluir** que hayas confirmado con el usuario. Nunca añadas
-   una regla «por si acaso».
-
-   Muestra el fichero compuesto al usuario antes de continuar.
-
-c) Ejecuta `/graphify` y **verifica que termina**. Deben existir:
-   - `graphify-out/.graphify_python`
-   - `graphify-out/graph.json`
-   - `graphify-out/GRAPH_REPORT.md`
-
-d) **PUERTA DE CALIDAD — no continuar sin pasarla.** Abre
-   `graphify-out/GRAPH_REPORT.md` y comprueba los god nodes:
-
-   | Resultado | Significado | Acción |
-   | --- | --- | --- |
-   | Documentos (`systemPatterns.md`, `STATE.md`, ficheros de `docs/`) | correcto | continuar |
-   | Ficheros de código (`.ts`, `.vue`, `.sol`…) en perfil CODE/MIXTO | ⛔ el `.graphifyignore` no se aplicó | revisar y reconstruir |
-   | El corpus reporta menos ficheros que los `.md` de `.harness/` | ⛔ `.harness/` sigue excluido | revisar sección A del ignore |
-   | God nodes sobre el propio graphify ("Pipeline de graphify", "--update Incremental...") en vez de abstracciones del proyecto | ⛔ `.harness/skills/graphify/` no se excluyó (verificado en producción: 2 de 10 god nodes fueron documentación del skill, no del proyecto) | confirmar que Bloque A.5 del `.graphifyignore` sigue teniendo `.harness/skills/graphify/` y reconstruir |
-
-   Reporta el resultado al usuario antes de seguir.
-
-e) Configura el versionado **selectivo** del grafo. Añade al `.gitignore`:
-
-   ```gitignore
-   graphify-out/*
-   !graphify-out/graph.json
-   !graphify-out/GRAPH_REPORT.md
-   !graphify-out/.graphify_labels.json
-   !graphify-out/manifest.json
-   ```
-
-   Y al `.gitattributes` (créalo si no existe):
-
-   ```gitattributes
-   graphify-out/graph.json    -diff -merge
-   graphify-out/manifest.json -diff -merge
-   ```
-
-   Explica el motivo al usuario: el grafo de conocimiento cuesta tokens de
-   reconstruir, así que viaja con el repo. `.graphify_python` y `.graphify_root`
-   contienen rutas absolutas de esta máquina y **nunca** se versionan.
 
 #### 3.5.2 — Motor de código (solo perfiles CODE y MIXTO-con-MCP)
 
@@ -430,7 +315,8 @@ d) Pide al usuario que reinicie el agente y verifique con `/mcp` que
 
 e) **Mide el coste de contexto.** Pide `/context` antes y después. Anota el
    delta en `.harness/PROFILE.md`. Si el perfil es MIXTO y el delta resulta
-   desproporcionado, propón desinstalar y quedarse solo con graphify.
+   desproporcionado, propón desinstalar y quedarse sin motor (lectura directa
+   con Grep/Read).
 
 f) Indexa el código y aplica la **PUERTA DE CALIDAD**:
 
@@ -446,7 +332,7 @@ g) Verifica que el lenguaje principal se parsea de verdad:
    `search_graph("<símbolo real conocido del proyecto>")`.
    Solidity, Vue SFC y los imports remotos de Deno son casos donde la
    cobertura no está garantizada — si falla, anótalo en `.harness/PROFILE.md`
-   y considera devolver ese lenguaje al grafo de graphify.
+   y cubre ese lenguaje con Grep/Read.
 
 #### 3.5.2-B — CodeGraph (solo si el motor elegido es `codegraph`)
 
@@ -492,15 +378,15 @@ g) **PUERTA DE CALIDAD:** `codegraph status` (ficheros indexados del orden del c
    Fase A/B; > 10× → entran dependencias, revisa la exclusión) y una consulta real con
    `codegraph_explore` sobre un símbolo conocido del proyecto. Si el lenguaje principal no
    se parsea, anótalo en `.harness/PROFILE.md` y valora cambiar de motor (`codebase-memory`)
-   o devolver ese lenguaje al grafo de graphify.
+   o cubrir ese lenguaje con Grep/Read.
 
 > **Cambiar de motor más adelante:** edita el campo `Motor de código` de `.harness/PROFILE.md`,
 > deja en `.mcp.json` solo el servidor del motor nuevo, ejecuta
 > `node scripts/harness-merge-instructions.js --sync` (recompone el enrutamiento de `AGENTS.md`)
 > y `index-code`.
 
-> Nota: graphify es Python puro (no usa npm/pnpm); `codebase-memory-mcp` es un binario estático
-> sin runtime; `codegraph` se instala con npm/pnpm. Los tres son independientes entre sí.
+> Nota: `codebase-memory-mcp` es un binario estático sin runtime; `codegraph` se instala con
+> npm/pnpm. Son independientes entre sí.
 
 ### 4. Entorno de Agentes (.harness/)
 Crea las siguientes carpetas para la arquitectura Task-Driven:
@@ -538,15 +424,14 @@ su propio fichero (`CLAUDE.md`, `GEMINI.md`, `QWEN.md`…; la lista y los ids es
   corrígelas a mano y repite.
 Crea la carpeta `docs/` en la raíz (si no existe) y copia:
 - `harness-kit-install/templates/docs/AGENTS_REFERENCE.md.template` a `docs/AGENTS_REFERENCE.md`
-- `harness-kit-install/templates/docs/GRAPHIFY_GUIDE.md.template` a `docs/GRAPHIFY_GUIDE.md`
 - `harness-kit-install/templates/docs/KNOWLEDGE_GRAPHS.md.template` a `docs/KNOWLEDGE_GRAPHS.md`
 - Si el perfil es CODE o MIXTO-con-MCP, copia también
   `harness-kit-install/templates/skills/doc-code-audit/SKILL.md` a
   `.claude/skills/doc-code-audit/SKILL.md` y `.agents/skills/doc-code-audit/SKILL.md`
 
-> ⚠️ **Si ya existe un docs/AGENTS_REFERENCE.md, docs/GRAPHIFY_GUIDE.md o docs/KNOWLEDGE_GRAPHS.md en el proyecto: FUSIONA, nunca sobrescribas.**
+> ⚠️ **Si ya existe un docs/AGENTS_REFERENCE.md o docs/KNOWLEDGE_GRAPHS.md en el proyecto: FUSIONA, nunca sobrescribas.**
 > Conserva al final del fichero generado cualquier sección ajena al harness-kit (por ejemplo
-> "## Cerebro OKF" de harness-okf, u otras de terceros). Estos tres ficheros aún no usan marcas.
+> "## Cerebro OKF" de harness-okf, u otras de terceros). Estos dos ficheros aún no usan marcas.
 
 ### 6. Ficheros de rol de agentes (.harness/rules/)
 Para cada área identificada, crea el fichero de reglas en `.harness/rules/`:
@@ -568,9 +453,6 @@ Adapta `harness-kit-install/templates/init.js.template` al stack detectado y cre
 > `harness-link-skills.js` si el proyecto es ESM.
 
 Verifica que al ejecutar `node init.js` (o `node init.cjs`, según lo anterior) termina con `[HARNESS OK]` antes de continuar.
-
-> ⚠️ `node init.js` comprueba que graphify está instalado (Sección 3.5) — si no lo
-> instalaste todavía, hazlo ahora o `init.js` devolverá `[HARNESS FAIL]`.
 
 > **Nota sobre verificación del entorno:** Se recomienda `init.js` (Node.js, cross-platform).
 > Existe también `harness-kit-install/templates/init.sh.template` como alternativa para entornos
@@ -698,9 +580,6 @@ Crea `.harness/context/index.md` desde
 1. Haz un commit con todo lo creado
 2. Muéstrame el árbol de ficheros generado (incluyendo `.harness/context/` y `.harness/skills/`)
 3. Dime cuál es el primer agente que debo abrir y por qué
-
-4. Confirma que `graphify-out/GRAPH_REPORT.md` existe (se generó en la Sección 3.5,
-   obligatoria) y muéstraselo al usuario como resumen de la indexación del proyecto.
 
 ## Reglas que debes seguir durante todo el proceso
 

@@ -101,9 +101,9 @@ if (!fs.existsSync(skillsSrc)) {
 }
 
 // ──────────────────────────────────────────────────────
-// BLOQUE 3 — Grafos de Conocimiento (según perfil)
+// BLOQUE 3 — Motor de código (según perfil)
 // ──────────────────────────────────────────────────────
-console.log("\n  ▸ [3/5] Grafos de Conocimiento");
+console.log("\n  ▸ [3/5] Motor de código");
 
 // 3.a — Leer el perfil
 const profilePath = path.join(__dirname, '.harness', 'PROFILE.md');
@@ -119,25 +119,12 @@ if (fs.existsSync(profilePath)) {
 check('Perfil del proyecto declarado (.harness/PROFILE.md)',
   profile !== null,
   'Falta .harness/PROFILE.md o no declara un perfil válido (DOC|MIXTO|CODE). ' +
-  'Es obligatorio: sin él no se puede verificar qué grafos deben existir. ' +
+  'Es obligatorio: sin él no se puede verificar qué motor de código debe existir. ' +
   'Ver prompts/01_init.md §3.5.0.'
 );
 
-// 3.b — Graphify: obligatorio en TODOS los perfiles
-check('Graphify inicializado (graphify-out/.graphify_python)',
-  fs.existsSync(path.join(__dirname, 'graphify-out', '.graphify_python')),
-  'Graphify es obligatorio en todos los perfiles. Ejecuta /graphify desde el agente de IA.'
-);
-
-check('Grafo de conocimiento generado (graphify-out/graph.json)',
-  fs.existsSync(path.join(__dirname, 'graphify-out', 'graph.json')),
-  'El grafo no se ha generado. La instalación no está completa: ejecuta /graphify. ' +
-  'Ver prompts/01_init.md §3.5.1 paso c.'
-);
-
-// 3.c — Motor de código (MCP): obligatorio solo si el perfil lo requiere.
-// El motor sale del campo "Motor de código" de PROFILE.md; sin él, codebase-memory
-// (único motor antes de 1.4.2).
+// 3.b — Motor de código (MCP): obligatorio solo si el perfil lo requiere.
+// El motor sale del campo "Motor de código" de PROFILE.md; sin él, codebase-memory.
 const ENGINES = {
   'codebase-memory': { key: 'codebase-memory', label: 'codebase-memory-mcp', hint: 'prompts/01_init.md §3.5.2' },
   'codegraph':       { key: 'codegraph',       label: 'CodeGraph',           hint: 'prompts/01_init.md §3.5.2-B' },
@@ -178,7 +165,7 @@ if (engine === 'none') {
 } else if (profile === 'MIXTO') {
   console.log(`  ℹ️   Perfil MIXTO — ${eng.label} es opcional (ver .harness/PROFILE.md)`);
 } else if (profile === 'DOC') {
-  console.log('  ℹ️   Perfil DOC — sin MCP por diseño; graphify cubre ambos dominios');
+  console.log('  ℹ️   Perfil DOC — sin motor de código por diseño; el código se lee directamente');
 }
 
 // ──────────────────────────────────────────────────────

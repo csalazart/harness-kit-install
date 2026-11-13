@@ -19,8 +19,7 @@
       "Bash(git add *)",
       "Bash(git commit -m *)",
       "Bash(git status*)",
-      "Bash(git log*)",
-      "Bash(graphify *)"
+      "Bash(git log*)"
     ],
     "deny": []
   }

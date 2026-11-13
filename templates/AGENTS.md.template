@@ -55,53 +55,40 @@ Contexto cargado: [proyecto] | Rama: [rama] | Próximo: [próximo paso] | Bloque
 
 **Paso 0.5 — Búsqueda: enrutamiento por dominio:**
 
-Este proyecto tiene grafos con dominios disjuntos. Elegir mal devuelve
-respuestas vacías o engañosas. El perfil del proyecto está en
+El código y el conocimiento se buscan con herramientas distintas. Elegir mal
+devuelve respuestas vacías o engañosas. El perfil del proyecto está en
 `.harness/PROFILE.md`; el detalle completo en `docs/KNOWLEDGE_GRAPHS.md`.
 
 | Dominio | Herramienta | Cobertura |
 | --- | --- | --- |
 | **Código** | {{CODE_ENGINE_LABEL}} | fuentes del proyecto |
-| **Conocimiento** | scripts `query-graph.*` (graphify) | `.harness/` `docs/` `plan/` |
+| **Conocimiento** | `.harness/context/index.md` + cerebro OKF (si existe `.harness/llm-wiki/`) + Grep/Read | `.harness/` `docs/` `plan/` |
 
 {{include:code-graph/{{CODE_ENGINE}}/routing.md}}
 
-*   **Cuándo SÍ usar `Grep`/`Glob`/`Read` sin pasar por el grafo:** texto plano,
-    configuración, ficheros que no son código, y **siempre `Read` un fichero
-    antes de editarlo**. El grafo localiza; no sustituye a leer lo que vas a tocar.
+*   **Cuándo SÍ usar `Grep`/`Glob`/`Read` sin pasar por el motor de código:**
+    texto plano, configuración, ficheros que no son código, y **siempre `Read`
+    un fichero antes de editarlo**. El motor localiza; no sustituye a leer lo
+    que vas a tocar.
 
 *   **Preguntas de CONOCIMIENTO** («¿por qué se decidió X?», «¿en qué estado
     está el proyecto?», «¿qué exige la regla de Y?», «¿qué plan hay para Z?»):
-    ejecutar el script de consulta — elegir por la HERRAMIENTA que vas a
-    invocar, no por el sistema operativo:
-    - Herramienta **PowerShell** → `.\scripts\query-graph.ps1 "<pregunta>"`
-    - Herramienta **Bash** → `./scripts/query-graph.sh "<pregunta>"`
-    Nunca el `.ps1` vía Bash (no parsea `param(...)`) ni el `.sh` vía PowerShell.
-    Si devuelve `exit code ≠ 0` o el aviso de "no se encontró la configuración
-    de Graphify" → fallback inmediato a Grep/Glob/Explore. No reintentar.
-    Si devuelve `exit code 0` con "sin resultados", es una respuesta real:
-    no activar el fallback.
+    1. `.harness/context/index.md` y `plans-index.md` para saber qué fichero leer.
+    2. Si existe `.harness/llm-wiki/`, el cerebro OKF: empezar por
+       `.harness/llm-wiki/index.md` y seguir solo los enlaces relevantes
+       (skill `okf-query` si está instalada).
+    3. Grep/Read sobre `docs/`, `plan/` y `.harness/` para lo que no esté ahí.
 
 *   **Preguntas MIXTAS** («¿está implementado este plan?», «¿la doc describe
     el código real?», «¿se cumple esta regla?»): usar la skill `doc-code-audit`
-    — extrae la afirmación del grafo de conocimiento y la verifica con
+    — extrae la afirmación de la documentación y la verifica con
     el motor de código. Citar ambas fuentes: `doc:línea` y símbolo real del código.
 
-> **Nota histórica (v3):** graphify daba falsos negativos en "quién importa X"
-> cuando el proyecto usa alias (`@/`, `~/`) y la cadena de `tsconfig.json` se
-> rompe (típico en Nuxt sin `.nuxt/` compilado). En perfiles CODE y MIXTO esto
-> ya no aplica: el MCP resuelve imports por análisis semántico. En perfil DOC,
-> si el grafo de graphify cubre código, la advertencia sigue vigente —
-> confirmar con `Grep` antes de concluir que algo no se usa.
-
-**Mantenimiento de los grafos:**
+**Mantenimiento de los índices:**
 {{include:code-graph/{{CODE_ENGINE}}/maintenance.md}}
-*   Tras modificar **documentación**, `.harness/context/`, `.harness/rules/`,
-    `.harness/llm-wiki/`, `docs/`, `plan/`: ejecutar `update-graph`.
-    **Cuesta tokens** (extracción semántica) — agrupa las ediciones.
-*   **Nunca** reintroducir código como indexable en `.graphifyignore` en
-    perfiles CODE/MIXTO: duplica el trabajo del MCP con peor precisión y
-    con un coste de tokens que el MCP no tiene.
+*   La documentación no tiene índice que mantener. El conocimiento de dominio
+    que merezca conservarse se integra en el cerebro OKF (skill `okf-ingest`)
+    si está instalado.
 
 **Paso 1 — Verificar el entorno (Solo si vas a desarrollar o modificar código):**
 > ℹ️ **Si la sesión es de solo-lectura, Q&A, consultas conceptuales o gestión del backlog (STATE.md), SALTA este paso.**
@@ -156,7 +143,7 @@ node init.js
 *   **Verificación real obligatoria**: Ejecutar tests y comandos reales, no asumir que funciona.
 *   **Commits antes de cerrar**: Toda sesión termina con commit semántico y `node init.js` en verde.
 *   **Jerarquía de búsqueda**: **{{CODE_ENGINE_LABEL}}** (código) /
-    **graphify** (conocimiento) → Glob (nombres de fichero) → Grep
+    **`context/` + cerebro OKF** (conocimiento) → Glob (nombres de fichero) → Grep
     (símbolos/contenido) → subagente Explore (solo si se prevén 3+ rondas).
     Las dos primeras son alternativas por dominio, no pasos consecutivos.
     No saltar al subagente si una búsqueda dirigida basta.

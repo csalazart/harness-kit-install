@@ -31,6 +31,28 @@ and this project uses a versioning scheme inspired by [Semantic Versioning](http
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-11-13
+
+Retirement of the knowledge-graph layer: knowledge is consulted without an index.
+Projects already installed are not touched automatically: the artifacts of the previous
+knowledge graph (its output folder, ignore file, query/rebuild scripts and skill) keep
+working as they are and can be removed by hand if desired.
+
+### Changed
+- Knowledge (`.harness/`, `docs/`, `plan/`) is consulted through `.harness/context/index.md`,
+  the OKF brain (optional, via the companion project `harness-okf`) and Grep/Read.
+- The DOC / MIXTO / CODE profiles are defined only by the code engine: DOC (0–20 files)
+  has no engine and the code is read directly; MIXTO (21–100) makes it optional; CODE
+  (>100) makes it mandatory.
+- Python is no longer required.
+- `Kit-Version` stamp bumped to `1.5.0`; version banners updated in `README.md`,
+  `README_ES.md` and `INSTALL.md`.
+
+### Removed
+- The kit's knowledge-graph layer: its skill, the query and rebuild scripts, the templates
+  and the per-stack exclusion library, its install/usage guide, the check in
+  `init.js`/`init.sh` and the automatic rebuild in `harness-finish.js`.
+
 ## [1.4.2] - 2026-10-15
 
 Multi-agent skill linking and marker-based instruction merging.
