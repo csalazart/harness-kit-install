@@ -1,5 +1,0 @@
-# php.txt — PHP
-
-vendor/
-composer.json
-composer.lock

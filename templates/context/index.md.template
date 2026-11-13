@@ -25,11 +25,11 @@
 - Si el proyecto tiene **harness-okf** instalado: conocimiento de DOMINIO → `.harness/llm-wiki/index.md`
 - Frontera: **context/ = dónde vamos (sesión) · llm-wiki/ = qué sabemos (dominio)**
 
-## Relación con los grafos (Harness Kit v4)
+## Relación con el motor de código
 
-Este proyecto tiene dos grafos con dominios disjuntos: `codebase-memory-mcp` (código)
-y graphify (conocimiento — incluye `.harness/` y este propio `context/`, salvo los
-ficheros volátiles listados en `.graphifyignore`). `context/` es memoria de **sesión**,
-no sustituye a ninguno de los dos grafos ni al backlog de `STATE.md`.
+El código lo cubre el motor de código del proyecto (si el perfil instala uno); el
+conocimiento no tiene índice y se consulta con este `context/`, el cerebro OKF (si
+existe `.harness/llm-wiki/`) y Grep/Read. `context/` es memoria de **sesión**: no
+sustituye al motor de código ni al backlog de `STATE.md`.
 
 Enrutamiento completo, perfiles y troubleshooting → `docs/KNOWLEDGE_GRAPHS.md`.

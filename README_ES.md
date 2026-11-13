@@ -1,6 +1,6 @@
 # Harness Engineering Kit
 > Kit reutilizable para aplicar la metodología de Arnés de Ingeniería a cualquier proyecto de software.
-> Versión: 1.4.2 | Actualizado: 2026-10-15 | [Historial de cambios](CHANGELOG_ES.md)
+> Versión: 1.5.0 | Actualizado: 2026-11-13 | [Historial de cambios](CHANGELOG_ES.md)
 
 > **Etiquetas de versión:** las etiquetas cortas que se usan en todo el kit (`v2`, `v3`,
 > `v4`, p. ej. en `prompts/07_upgrade_v3_to_v4.md`) son la misma numeración que la
@@ -15,16 +15,19 @@ Este kit convierte a una IA de "generador de texto" en un **ingeniero responsabl
 
 Usa una **arquitectura Lean basada en Workspaces**: cada tarea recibe un workspace aislado con su briefing (`orden.md`) y área de trabajo (`session.md`). Los sub-agentes trabajan con contexto individual y acceso completo al código. Los resultados se archivan automáticamente.
 
-### Grafo dual de conocimiento (v4)
+### Motor de código y capa de conocimiento
 
-El kit instala dos grafos con dominios disjuntos: **`codebase-memory-mcp`** indexa el
-código fuente del proyecto (AST + resolución semántica de llamadas, se reconstruye
-gratis), y **graphify** indexa la capa de conocimiento (`.harness/`, `docs/`, `plan/`).
-Que el grafo de código se instale o no depende de un **perfil** de proyecto (DOC /
-MIXTO / CODE) calculado según el tamaño del código — ver `docs/KNOWLEDGE_GRAPHS.md`
-en un proyecto ya instalado, o `PLAN_V4_GRAFO_DUAL.md` en este repo para el diseño completo.
+El **código fuente** lo sirve un **motor de código** (AST + resolución semántica de
+llamadas, se reindexa gratis), o ninguno, según un **perfil** de proyecto calculado por
+el tamaño del código: **DOC** (0–20 ficheros) no instala motor y el código se lee
+directamente; **MIXTO** (21–100) deja el motor como opcional; **CODE** (>100) lo hace obligatorio.
 
-El **motor del grafo de código** es seleccionable: `codebase-memory-mcp`, `codegraph` (alternativa) o
+La **capa de conocimiento** (`.harness/`, `docs/`, `plan/`) no tiene índice: se consulta
+con `.harness/context/index.md`, el cerebro OKF si está instalado (ver harness-okf más
+abajo) y Grep/Read. Ver `docs/KNOWLEDGE_GRAPHS.md` en un proyecto ya instalado para el
+detalle del enrutamiento.
+
+El **motor de código** es seleccionable: `codebase-memory-mcp`, `codegraph` (alternativa) o
 `auto`, donde la IA elige el que mejor encaje con el proyecto. Solo corre uno a la vez; la elección
 queda registrada en `.harness/PROFILE.md`.
 
@@ -34,8 +37,8 @@ queda registrada en `.harness/PROFILE.md`.
 independiente que añade una **base de conocimiento de dominio** persistente
 (`.harness/llm-wiki/`) — conceptos, fuentes verificadas, playbooks. No requiere este
 kit, pero se instala bajo el mismo contenedor `.harness/` y nunca toca `context/`,
-`rules/` ni `STATE.md`. Si está instalado, su base de conocimiento se indexa con
-graphify igual que el resto de `.harness/` (ver el modelo de grafo dual arriba).
+`rules/` ni `STATE.md`. Si está instalado, su base de conocimiento pasa a formar parte
+de la capa de conocimiento y se consulta directamente (ver el modelo arriba).
 
 ---
 
@@ -67,15 +70,10 @@ harness-kit-install/
 │   ├── 04_phase_handoff.md                ← Protocolo de cierre de fase
 │   ├── 05_decision_resolver.md            ← Desbloquear decisiones críticas pendientes
 │   ├── 06_migrate.md                      ← Migrar un proyecto desde la estructura Harness antigua
-│   └── 07_upgrade_v3_to_v4.md             ← Actualizar una instalación v3 (Lean) a v4 (grafo dual)
+│   └── 07_upgrade_v3_to_v4.md             ← Actualizar una instalación v3 (Lean) a v4
 │
 ├── questionnaire/
 │   └── project_discovery.md               ← Preguntas que la IA hace si falta contexto
-│
-├── graphifyignore-library/                ← Fragmentos de .graphifyignore por stack (v4)
-│   ├── _code-sources.txt, nodejs.txt, nextjs.txt, nuxt.txt, vue-react.txt,
-│   │   python.txt, php.txt, rust.txt, solidity-hardhat.txt, docker.txt,
-│   │   cloudflare.txt, _common-build.txt, _linting.txt
 │
 ├── templates/                             ← Plantillas para los ficheros de control
 │   ├── CLAUDE.md.template                 ← Fichero maestro del proyecto (Claude Code)
@@ -85,7 +83,6 @@ harness-kit-install/
 │   ├── orden.md.template                  ← Briefing del workspace de tarea
 │   ├── SESSION.md.template                ← Área de trabajo del workspace de tarea
 │   ├── PROFILE.md.template                ← Perfil del proyecto: DOC/MIXTO/CODE (v4)
-│   ├── .graphifyignore.base.template      ← Núcleo invariante, se compone con graphifyignore-library/ (v4)
 │   ├── .mcp.json.template                 ← Declaración del servidor codebase-memory-mcp (v4)
 │   ├── init.js.template                   ← Verificación del entorno (node init.js)
 │   ├── init.sh.template                   ← Alternativa Bash pura de init.js
@@ -96,8 +93,6 @@ harness-kit-install/
 │   ├── harness-agents.json                ← Matriz de agentes (rutas, detección, ficheros de instrucciones) que leen ambos scripts
 │   ├── AGENT_POINTER.md.template          ← Fichero "lee AGENTS.md primero" para agentes con fichero propio (QWEN.md…)
 │   ├── code-graph/                        ← Fragmentos por motor de código (codebase-memory | codegraph | none): enrutamiento de AGENTS.md, mantenimiento, entrada de .mcp.json
-│   ├── query-graph.ps1/sh.template        ← Consulta el grafo de conocimiento (graphify)
-│   ├── update-graph.ps1/sh.template       ← Reconstruye el grafo de conocimiento (graphify)
 │   ├── index-code.ps1/sh.template         ← Reindexa el grafo de código (codebase-memory-mcp, v4)
 │   ├── .claude/
 │   │   └── settings.json.template         ← Configuración de Claude Code para el proyecto
@@ -107,10 +102,8 @@ harness-kit-install/
 │   ├── context/                           ← Plantillas de .harness/context/ (index, activeContext, progress…)
 │   ├── docs/
 │   │   ├── AGENTS_REFERENCE.md.template   ← Referencia extendida del protocolo
-│   │   ├── GRAPHIFY_GUIDE.md.template     ← Guía de instalación y uso de graphify
-│   │   └── KNOWLEDGE_GRAPHS.md.template   ← Referencia del grafo dual: enrutamiento, coste, troubleshooting (v4)
+│   │   └── KNOWLEDGE_GRAPHS.md.template   ← Motor de código + enrutamiento del conocimiento: perfiles, coste, troubleshooting (v4)
 │   └── skills/
-│       ├── graphify/                      ← Skill del grafo de conocimiento (query, update, extraction spec…)
 │       ├── doc-code-audit/                ← Skill de careo doc↔código (v4, solo CODE/MIXTO-con-MCP)
 │       ├── load-memory.md
 │       └── update-memory.md

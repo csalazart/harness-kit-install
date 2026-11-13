@@ -7,17 +7,15 @@
 ## Lo que necesitas antes de empezar
 
 - [ ] **Node.js** instalado en tu máquina → [nodejs.org](https://nodejs.org) (descarga la versión LTS)
-- [ ] **Python 3.10+** instalado en tu máquina → [python.org](https://www.python.org/downloads/) (requerido por Graphify, obligatorio en este kit para que el proyecto quede indexado)
 - [ ] **`codebase-memory-mcp`** — solo si tu proyecto resulta perfil CODE, o MIXTO y decides activarlo (lo decide el agente durante la instalación, ver PASO 4)
 - [ ] **Claude Code** (u otro agente IA) abierto en tu proyecto
 - [ ] La carpeta `harness-kit-install/` (esta misma carpeta que estás leyendo)
 
-Verifica Node.js y Python abriendo una terminal y ejecutando:
+Verifica Node.js abriendo una terminal y ejecutando:
 ```
 node -v
-python --version
 ```
-Debe mostrar algo como `v20.x.x` y `Python 3.10+`. Si alguno da error, instálalo primero.
+Debe mostrar algo como `v20.x.x`. Si da error, instálalo primero.
 
 ---
 
@@ -100,7 +98,7 @@ mi-proyecto/
 │
 ├── .harness/
 │   ├── STATE.md           ← tu lista de tareas y decisiones (fuente de verdad)
-│   ├── PROFILE.md         ← perfil del proyecto (DOC/MIXTO/CODE) y qué grafos se instalaron
+│   ├── PROFILE.md         ← perfil del proyecto (DOC/MIXTO/CODE) y qué motor de código se instaló
 │   ├── context/           ← contexto del proyecto para la IA
 │   ├── skills/            ← habilidades disponibles para el agente
 │   ├── rules/             ← reglas por área del proyecto
@@ -108,9 +106,8 @@ mi-proyecto/
 │   └── logs/              ← historial de tareas completadas
 │
 ├── docs/
-│   └── KNOWLEDGE_GRAPHS.md ← qué indexa cada grafo, enrutamiento, coste, troubleshooting
+│   └── KNOWLEDGE_GRAPHS.md ← motor de código y consulta del conocimiento: enrutamiento, coste, troubleshooting
 │
-├── graphify-out/          ← grafo de CONOCIMIENTO (.harness/, docs/, plan/) — siempre se instala
 ├── .mcp.json              ← servidor codebase-memory-mcp — solo si tu perfil es CODE, o MIXTO y lo activaste
 │
 ├── .agents/skills/        ← skills accesibles para cualquier agente IA
@@ -167,27 +164,15 @@ de cada agente durante la instalación.
 Sí. Vuelve al Paso 3 y dile al agente:
 `"El harness no quedó bien instalado, por favor revisa y completa la instalación leyendo harness-kit-install/prompts/01_init.md"`
 
-**¿Graphify es obligatorio?**
-Sí, en los tres perfiles de proyecto. El agente lo instala automáticamente durante
-la construcción del harness (Fase C del prompt de instalación) — es un requisito
-para que `node init.js` reporte `[HARNESS OK]`. Solo necesitas tener Python 3.10+
-instalado de antemano; el skill instala el paquete `graphifyy` por ti la primera
-vez que ejecuta `/graphify`.
-
-**¿Necesito Python para graphify?**
-Sí. Graphify es una librería Python. Instálalo desde
-[python.org](https://www.python.org/downloads/) **antes** de empezar el Paso 3 de
-esta guía — el agente lo necesitará para completar la instalación. No usa npm/pnpm.
-
 **¿`codebase-memory-mcp` es obligatorio?**
-No, lo condicional es esto, no graphify. Este kit (v4) separa dos grafos: graphify
-indexa el conocimiento del proyecto (siempre) y `codebase-memory-mcp` indexa el
-código fuente. Si tu proyecto tiene poco código (perfil DOC), el agente no lo
-instala — no aporta nada y el mismo grafo de conocimiento ya cubre ese código.
-Si tiene mucho código (perfil CODE) se instala siempre; en el rango intermedio
-(MIXTO) el agente te lo propone y tú decides. La decisión queda registrada en
-`.harness/PROFILE.md`, y `docs/KNOWLEDGE_GRAPHS.md` explica el enrutamiento entre
-ambos grafos con más detalle.
+Depende del perfil del proyecto. `codebase-memory-mcp` (o el motor que elijas) indexa
+el código fuente. Si tu proyecto tiene poco código (perfil DOC, 0–20 ficheros), el
+agente no lo instala — no aporta nada y el código se lee directamente. Si tiene mucho
+código (perfil CODE, más de 100 ficheros) se instala siempre; en el rango intermedio
+(MIXTO, 21–100) el agente te lo propone y tú decides. El conocimiento del proyecto
+(`.harness/`, `docs/`, `plan/`) no se indexa: se consulta con `.harness/context/index.md`,
+el cerebro OKF si está instalado y búsquedas directas. La decisión queda registrada en
+`.harness/PROFILE.md`, y `docs/KNOWLEDGE_GRAPHS.md` explica el enrutamiento con más detalle.
 
 **¿Puedo usar `codegraph` en lugar de `codebase-memory-mcp`?**
 Sí: el motor del grafo de código es seleccionable. Durante la instalación el agente te
@@ -203,4 +188,4 @@ para ver el motivo registrado.
 
 ---
 
-> Kit versión 1.4.2 · Para más detalles técnicos ver `QUICKSTART.md`
+> Kit versión 1.5.0 · Para más detalles técnicos ver `QUICKSTART.md`

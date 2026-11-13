@@ -77,10 +77,10 @@ if [ -f ".harness/STATE.md" ]; then
 fi
 
 # ──────────────────────────────────────────────────────
-# BLOQUE 2 — Grafos de Conocimiento (según perfil)  (FIJO, no modificar)
+# BLOQUE 2 — Motor de código (según perfil)  (FIJO, no modificar)
 # ──────────────────────────────────────────────────────
 echo ""
-echo "  ▸ [2/3] Grafos de Conocimiento"
+echo "  ▸ [2/3] Motor de código"
 
 # 2.a — Leer el perfil declarado
 PROFILE=""
@@ -97,19 +97,8 @@ else
     "falta .harness/PROFILE.md o no declara un perfil válido (DOC|MIXTO|CODE). Ver prompts/01_init.md §3.5.0."
 fi
 
-# 2.b — Graphify: obligatorio en TODOS los perfiles
-[ -f "graphify-out/.graphify_python" ] \
-  && check "Graphify inicializado (graphify-out/.graphify_python)" "ok" \
-  || check "Graphify inicializado (graphify-out/.graphify_python)" \
-       "graphify es obligatorio en todos los perfiles. Ejecuta /graphify desde el agente de IA."
-
-[ -f "graphify-out/graph.json" ] \
-  && check "Grafo de conocimiento generado (graphify-out/graph.json)" "ok" \
-  || check "Grafo de conocimiento generado (graphify-out/graph.json)" \
-       "el grafo no se ha generado. Ejecuta /graphify. Ver prompts/01_init.md §3.5.1 paso c."
-
-# 2.c — Motor de código (MCP): obligatorio solo si el perfil lo requiere.
-# Motor = campo "Motor de código" de PROFILE.md; sin él, codebase-memory (único motor antes de 1.4.2).
+# 2.b — Motor de código (MCP): obligatorio solo si el perfil lo requiere.
+# Motor = campo "Motor de código" de PROFILE.md; sin él, codebase-memory.
 ENGINE="codebase-memory"
 if [ -f ".harness/PROFILE.md" ]; then
   E=$(grep -iE '^-?[[:space:]]*\*{0,2}Motor de c.{1,2}digo' .harness/PROFILE.md 2>/dev/null \
@@ -140,7 +129,7 @@ elif [ "$PROFILE" = "CODE" ]; then
 elif [ "$PROFILE" = "MIXTO" ]; then
   echo "  ℹ️   Perfil MIXTO — $ENGINE_LABEL es opcional (ver .harness/PROFILE.md)"
 elif [ "$PROFILE" = "DOC" ]; then
-  echo "  ℹ️   Perfil DOC — sin MCP por diseño; graphify cubre ambos dominios"
+  echo "  ℹ️   Perfil DOC — sin motor de código por diseño; el código se lee directamente"
 fi
 
 # ──────────────────────────────────────────────────────

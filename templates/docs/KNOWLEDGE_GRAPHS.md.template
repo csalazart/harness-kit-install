@@ -1,22 +1,20 @@
-# KNOWLEDGE_GRAPHS.md — Los dos grafos de {{PROJECT_NAME}}
-> Referencia técnica del modelo de grafo dual (Harness Kit v4). Para el enrutamiento
+# KNOWLEDGE_GRAPHS.md — Motor de código y búsqueda en {{PROJECT_NAME}}
+> Referencia técnica de cómo se busca en este proyecto. Para el enrutamiento
 > rápido de cada pregunta, ver `AGENTS.md` Paso 0.5 — este documento es el detalle
 > que no cabe ahí por coste de contexto.
 
-## 1. Los dos grafos
+## 1. Dos dominios, dos formas de buscar
 
-| | `codebase-memory-mcp` | `graphify` |
+| | Código | Conocimiento |
 | --- | --- | --- |
-| Indexa | Código fuente del proyecto | Documentación, `.harness/`, `docs/`, `plan/` |
-| Cómo | AST (tree-sitter) + Hybrid LSP (resolución semántica) | Extracción semántica vía LLM |
-| Dónde vive | SQLite en `~/.cache/codebase-memory-mcp/`, por máquina | `graphify-out/` (parcialmente versionado, ver §4) |
-| Coste de reconstruir | 0 tokens, segundos | Tokens reales (~44.677 tokens para 38.787 palabras, medido) |
-| Se instala | Solo perfiles CODE y MIXTO-con-MCP | Siempre, en los 3 perfiles |
-| Interfaz | 15 herramientas MCP (o menos, según `--tool-profile`) | Scripts `query-graph.*` / `update-graph.*` + skill `graphify` |
+| Qué cubre | Código fuente del proyecto | Documentación, `.harness/`, `docs/`, `plan/` |
+| Herramienta | El motor de código del perfil (ver abajo), o `Glob`/`Grep`/`Read` en perfil DOC | `.harness/context/index.md` + cerebro OKF (si existe `.harness/llm-wiki/`) + `Grep`/`Read` |
+| Índice | Sí, local y por máquina (no se versiona) | No hay índice que mantener |
+| Coste de mantenerlo | 0 tokens (watcher / reindexado en segundos) | 0 |
 
 ### Motor de código elegido
 
-El grafo de código puede indexarlo **uno** de dos motores (nunca los dos a la vez). Se elige en la
+El código puede indexarlo **uno** de dos motores (nunca los dos a la vez). Se elige en la
 instalación — el usuario o `auto` (decide la IA) — y queda en el campo `Motor de código` de
 `.harness/PROFILE.md`.
 
@@ -48,51 +46,31 @@ servidor nuevo, ejecuta `node scripts/harness-merge-instructions.js --sync` y `i
 | Ver el código exacto | `get_code_snippet(qualified_name="...")` | Código |
 | Estructura del proyecto | `get_architecture()` | Código |
 | Búsqueda textual en código | `search_code()` (preferir sobre `Grep`) | Código |
-| ¿Por qué se decidió X? / ¿qué exige la regla Y? / ¿qué plan hay para Z? | `query-graph.ps1\|sh "<pregunta>"` | Conocimiento |
-| ¿Está implementado este plan? / ¿la doc describe el código real? | Skill `doc-code-audit` (extrae del grafo de conocimiento, verifica contra el de código) | Mixta |
+| ¿Por qué se decidió X? / ¿qué exige la regla Y? / ¿qué plan hay para Z? | `.harness/context/index.md` → cerebro OKF (`.harness/llm-wiki/index.md`, skill `okf-query`) → `Grep`/`Read` | Conocimiento |
+| ¿Está implementado este plan? / ¿la doc describe el código real? | Skill `doc-code-audit` (extrae la afirmación de la doc, la verifica contra el motor de código) | Mixta |
 
 ## 3. Perfiles DOC / MIXTO / CODE
 
-| Perfil | Umbral (ficheros de código) | graphify | `codebase-memory-mcp` |
-| --- | --- | --- | --- |
-| DOC | 0–20 (o proyecto de infraestructura/configuración) | conocimiento + código | no instalado |
-| MIXTO | 21–100 | conocimiento | opcional, `--tool-profile=scout` recomendado |
-| CODE | >100 | conocimiento | sí, superficie completa (o `analysis` sin mutaciones) |
+| Perfil | Umbral (ficheros de código) | Motor de código |
+| --- | --- | --- |
+| DOC | 0–20 (o proyecto de infraestructura/configuración) | ninguno — el código se lee directamente |
+| MIXTO | 21–100 | opcional (con `codebase-memory`, `--tool-profile=scout` recomendado) |
+| CODE | >100 | obligatorio (con `codebase-memory`, superficie completa o `analysis` sin mutaciones) |
 
 El perfil vigente y su justificación están en `.harness/PROFILE.md`. Puede corregirse manualmente si el conteo automático no refleja bien el proyecto (p. ej. mucho código autogenerado, o un repo pequeño pero crítico).
 
 ## 4. Coste y versionado
 
-- **Código:** 0 tokens, se reconstruye en segundos. No se versiona nada de `~/.cache/codebase-memory-mcp/`.
-- **Conocimiento:** cuesta tokens reales (extracción semántica vía LLM). Por eso se versiona **selectivamente**:
-
-```gitignore
-graphify-out/*
-!graphify-out/graph.json
-!graphify-out/GRAPH_REPORT.md
-!graphify-out/.graphify_labels.json
-!graphify-out/manifest.json
-```
-
-```gitattributes
-graphify-out/graph.json    -diff -merge
-graphify-out/manifest.json -diff -merge
-```
-
-`.graphify_python` y `.graphify_root` **nunca** se versionan (rutas absolutas de la máquina). Recomendado usar `GEMINI_API_KEY` para el etiquetado de comunidades si el corpus documental es grande — sin ella, más del 40% de comunidades pueden quedar sin etiquetar (ver troubleshooting).
-
-**Política de conflictos:** ante un conflicto de merge en `graph.json`, **no mergear — regenerar** desde la documentación ya fusionada.
+- **Código:** 0 tokens, se reconstruye en segundos. No se versiona nada del índice (`~/.cache/codebase-memory-mcp/` o `.codegraph/`).
+- **Conocimiento:** no hay índice; la documentación se versiona como cualquier otro fichero del repo.
 
 ## 5. Mantenimiento — qué evento exige qué acción
 
 | Evento | Acción | Coste |
 | --- | --- | --- |
-| Cambia código | Nada — el MCP tiene watcher y `detect_changes` | 0 |
-| Cambia `.harness/`, `docs/`, `plan/` | `update-graph.ps1\|sh` (filtrado por paths) | tokens |
-| Cierre de tarea (`harness-finish`) | Regenera el grafo **solo si cambió documentación** | condicional |
-| Perfil DOC | `update-graph` cubre todo; no hay MCP | tokens |
-
-Nunca reintroducir código como indexable en `.graphifyignore` en perfiles CODE/MIXTO: duplica el trabajo del MCP con peor precisión y con un coste de tokens que el MCP no tiene.
+| Cambia código | Nada — el motor tiene watcher (`detect_changes` / `codegraph sync -q .` para forzar) | 0 |
+| Cambia `.harness/`, `docs/`, `plan/` | Nada. Si es conocimiento de dominio que merece conservarse, integrarlo en el cerebro OKF (`okf-ingest`) | 0 |
+| Perfil DOC | Sin motor de código: nada que reindexar | 0 |
 
 ## 6. Referencia operativa de `codebase-memory-mcp`
 
@@ -152,11 +130,7 @@ Nunca reintroducir código como indexable en `.graphifyignore` en perfiles CODE/
 | Síntoma | Causa | Solución |
 | --- | --- | --- |
 | `.mcp.json` no arranca el servidor | Backslashes en rutas Windows → JSON inválido | Usar forward slashes; validar con `node -e "JSON.parse(require('fs').readFileSync('.mcp.json','utf8'))"` |
-| Los god nodes de `GRAPH_REPORT.md` son `.ts`/`.vue`/etc. en perfil CODE/MIXTO | El `.graphifyignore` no se aplicó o el Bloque B está incompleto | Revisar Bloque B del `.graphifyignore`, reconstruir |
-| El corpus de graphify reporta menos ficheros que los `.md` de `.harness/` | `.harness/` sigue excluido (regresión al bug v3) | Revisar que el Bloque A no reintrodujo `.harness/` ni `.*` |
 | `node_modules`/`.nuxt` aparecen en el índice del MCP | Se indexó la raíz en vez de las carpetas de fuentes | `delete_project` y reindexar apuntando a las carpetas concretas |
-| Comunidades sin etiquetar en más del 40% | Falta `GEMINI_API_KEY` | Relanzar `--cluster-only` con la key configurada |
-| `No module named graphify` | Intérprete mal resuelto | Revisar `graphify-out/.graphify_python` |
 | `codegraph_explore` no aparece en `/mcp` | `.mcp.json` sin la entrada `codegraph`, o falta el binario | Añadir `{"command":"codegraph","args":["serve","--mcp"]}`; comprobar `codegraph --version` |
 | `codegraph` responde con código viejo | Índice sin sincronizar (CLI) o watcher parado | `codegraph sync -q .` |
 | `.codegraph/` aparece como no rastreado en git | Su `.gitignore` interno se des-ignora a sí mismo | Añadir `.codegraph/` al `.gitignore` del proyecto |

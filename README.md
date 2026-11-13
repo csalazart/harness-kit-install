@@ -1,6 +1,6 @@
 # Harness Engineering Kit
 > Reusable kit to apply the Engineering Harness methodology to any software project.
-> Version: 1.4.2 | Updated: 2026-10-15 | [Changelog](CHANGELOG.md)
+> Version: 1.5.0 | Updated: 2026-11-13 | [Changelog](CHANGELOG.md)
 
 > **Version labels:** the short labels used across this kit (`v2`, `v3`, `v4`, e.g. in
 > `prompts/07_upgrade_v3_to_v4.md`) are the same numbering as the kit version: **v2 = 1.2,
@@ -15,16 +15,18 @@ This kit turns a "text generator" AI into a **responsible and autonomous enginee
 
 It uses a **Workspace-based Lean architecture**: each task gets an isolated workspace with its briefing (`orden.md`) and working area (`session.md`). Sub-agents work with individual context and full code access. Results are archived automatically.
 
-### Dual knowledge graph (v4)
+### Code engine and knowledge layer
 
-The kit installs two graphs with disjoint domains: **`codebase-memory-mcp`** indexes
-the project's source code (AST + semantic call resolution, reconstructed for free),
-and **graphify** indexes the project's knowledge layer (`.harness/`, `docs/`, `plan/`).
-Whether the code graph gets installed depends on a project **profile** (DOC / MIXTO /
-CODE) computed from the codebase's size — see `docs/KNOWLEDGE_GRAPHS.md` in an
-installed project, or `PLAN_V4_GRAFO_DUAL.md` in this repo for the full design.
+**Source code** is served by a **code engine** (AST + semantic call resolution, reindexed
+for free), or by none, depending on a project **profile** computed from the codebase's
+size: **DOC** (0–20 files) installs no engine and the code is read directly; **MIXTO**
+(21–100) makes the engine optional; **CODE** (>100) makes it mandatory.
 
-The **code-graph engine** is selectable: `codebase-memory-mcp`, `codegraph` (alternative), or
+The **knowledge layer** (`.harness/`, `docs/`, `plan/`) has no index: it is consulted
+through `.harness/context/index.md`, the OKF brain if installed (see harness-okf below)
+and Grep/Read. See `docs/KNOWLEDGE_GRAPHS.md` in an installed project for the routing details.
+
+The **code engine** is selectable: `codebase-memory-mcp`, `codegraph` (alternative), or
 `auto`, where the AI picks the better fit for the project. Only one runs at a time; the choice is
 recorded in `.harness/PROFILE.md`.
 
@@ -34,7 +36,7 @@ recorded in `.harness/PROFILE.md`.
 that adds a persistent **domain knowledge base** (`.harness/llm-wiki/`) — concepts,
 verified sources, playbooks. It doesn't require this kit, but installs under the same
 `.harness/` container and never touches `context/`, `rules/`, or `STATE.md`. If installed,
-its knowledge base is indexed by graphify like the rest of `.harness/` (see the dual-graph
+its knowledge base becomes part of the knowledge layer and is consulted directly (see the
 model above).
 
 ---
@@ -67,15 +69,10 @@ harness-kit-install/
 │   ├── 04_phase_handoff.md                ← Phase end protocol
 │   ├── 05_decision_resolver.md            ← Unlock pending critical decisions
 │   ├── 06_migrate.md                      ← Migrate a project from the old Harness structure
-│   └── 07_upgrade_v3_to_v4.md             ← Upgrade an existing v3 (Lean) install to v4 (dual graph, v4)
+│   └── 07_upgrade_v3_to_v4.md             ← Upgrade an existing v3 (Lean) install to v4
 │
 ├── questionnaire/
 │   └── project_discovery.md               ← Questions the AI asks if context is missing
-│
-├── graphifyignore-library/                ← Per-stack .graphifyignore fragments (v4)
-│   ├── _code-sources.txt, nodejs.txt, nextjs.txt, nuxt.txt, vue-react.txt,
-│   │   python.txt, php.txt, rust.txt, solidity-hardhat.txt, docker.txt,
-│   │   cloudflare.txt, _common-build.txt, _linting.txt
 │
 ├── templates/                             ← Templates for control files
 │   ├── CLAUDE.md.template                 ← Master project file (Claude Code)
@@ -85,7 +82,6 @@ harness-kit-install/
 │   ├── orden.md.template                  ← Task workspace briefing
 │   ├── SESSION.md.template                ← Task workspace working area
 │   ├── PROFILE.md.template                ← Project profile: DOC/MIXTO/CODE (v4)
-│   ├── .graphifyignore.base.template      ← Invariant core, composed with graphifyignore-library/ (v4)
 │   ├── .mcp.json.template                 ← codebase-memory-mcp server declaration (v4)
 │   ├── init.js.template                   ← Environment health check (node init.js)
 │   ├── init.sh.template                   ← Bash-only alternative to init.js
@@ -96,8 +92,6 @@ harness-kit-install/
 │   ├── harness-agents.json                ← Agent matrix (paths, detection, instruction files) read by both scripts
 │   ├── AGENT_POINTER.md.template          ← "Read AGENTS.md first" file for agents with their own instruction file (QWEN.md…)
 │   ├── code-graph/                        ← Code-graph engine fragments (codebase-memory | codegraph | none): AGENTS.md routing, maintenance, .mcp.json entry
-│   ├── query-graph.ps1/sh.template        ← Query the knowledge graph (graphify)
-│   ├── update-graph.ps1/sh.template       ← Rebuild the knowledge graph (graphify)
 │   ├── index-code.ps1/sh.template         ← Reindex the code graph (codebase-memory-mcp, v4)
 │   ├── .claude/
 │   │   └── settings.json.template         ← Claude Code project configuration
@@ -107,10 +101,8 @@ harness-kit-install/
 │   ├── context/                           ← .harness/context/ templates (index, activeContext, progress, …)
 │   ├── docs/
 │   │   ├── AGENTS_REFERENCE.md.template   ← Extended protocol reference
-│   │   ├── GRAPHIFY_GUIDE.md.template     ← Graphify install + usage guide
-│   │   └── KNOWLEDGE_GRAPHS.md.template   ← Dual-graph reference: routing, cost, troubleshooting (v4)
+│   │   └── KNOWLEDGE_GRAPHS.md.template   ← Code engine + knowledge routing: profiles, cost, troubleshooting (v4)
 │   └── skills/
-│       ├── graphify/                      ← Knowledge-graph skill (query, update, extraction spec…)
 │       ├── doc-code-audit/                ← Docs↔code cross-check skill (v4, CODE/MIXTO-con-MCP only)
 │       ├── load-memory.md
 │       └── update-memory.md

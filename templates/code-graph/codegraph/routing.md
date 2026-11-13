@@ -1,5 +1,4 @@
-*   **Preguntas de CÓDIGO → CodeGraph (MCP `codegraph`).** Nunca los scripts de graphify:
-    el código no está en ese grafo.
+*   **Preguntas de CÓDIGO → CodeGraph (MCP `codegraph`).**
 
     | Pregunta | Llamada |
     | --- | --- |
@@ -26,6 +25,6 @@
     5. Nunca ejecutes `codegraph uninit`, `codegraph install`, `codegraph uninstall` ni
        `codegraph upgrade`; `codegraph index` solo para recuperar un índice corrupto.
 
-    > Si el perfil es **DOC** no hay motor de código: el código está en el grafo de
-    > graphify (o se lee directamente — son pocos ficheros). Consultar
+    > Si el perfil es **DOC** no hay motor de código: el código se lee directamente
+    > con `Glob`/`Grep`/`Read` (son pocos ficheros). Consultar
     > `.harness/PROFILE.md` en caso de duda.

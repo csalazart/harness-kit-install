@@ -34,6 +34,29 @@ proyecto usa un versionado inspirado en [Semantic Versioning](https://semver.org
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-11-13
+
+Retirada de la capa de grafo de conocimiento: el conocimiento se consulta sin índice.
+Los proyectos ya instalados no se tocan automáticamente: los artefactos del grafo de
+conocimiento anterior (su carpeta de salida, fichero de exclusiones, scripts de consulta y
+reconstrucción y skill) siguen como están y se pueden retirar a mano si se desea.
+
+### Cambiado
+- El conocimiento (`.harness/`, `docs/`, `plan/`) se consulta con `.harness/context/index.md`,
+  el cerebro OKF (opcional, con el proyecto hermano `harness-okf`) y Grep/Read.
+- Los perfiles DOC / MIXTO / CODE se definen solo por el motor de código: DOC (0–20
+  ficheros) no tiene motor y el código se lee directamente; MIXTO (21–100) lo deja como
+  opcional; CODE (>100) lo hace obligatorio.
+- Ya no se requiere Python.
+- Sello `Kit-Version` actualizado a `1.5.0`; banners de versión actualizados en `README.md`,
+  `README_ES.md` e `INSTALL.md`.
+
+### Eliminado
+- La capa de grafo de conocimiento del kit: su skill, los scripts de consulta y
+  reconstrucción, las plantillas y la librería de exclusiones por stack, su guía de
+  instalación y uso, la comprobación en `init.js`/`init.sh` y la reconstrucción automática
+  en `harness-finish.js`.
+
 ## [1.4.2] - 2026-10-15
 
 Enlace de skills multi-agente y fusión de instrucciones con marcas.

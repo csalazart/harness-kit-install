@@ -1,9 +1,0 @@
-# python.txt — Python
-
-.venv/
-venv/
-__pycache__/
-*.pyc
-requirements.txt
-poetry.lock
-Pipfile.lock

@@ -1,10 +1,10 @@
-# PROFILE.md — Perfil del grafo dual de {{PROJECT_NAME}}
+# PROFILE.md — Perfil y motor de código de {{PROJECT_NAME}}
 > Registrado durante `prompts/01_init.md` §3.5.0. **No es opcional.**
-> `init.js`/`init.sh` leen este fichero para saber qué grafos deben existir —
+> `init.js`/`init.sh` leen este fichero para saber qué motor de código debe existir —
 > sin él no se puede distinguir "el MCP no está porque el perfil es DOC" de
 > "el MCP no está porque la instalación falló".
 
-- **Kit-Version:** 1.4.2
+- **Kit-Version:** 1.5.0
   (versión del harness-kit instalada — la lee cualquier futuro prompt de
   actualización para saber de qué versión parte, en vez de adivinarlo por
   ausencia/presencia de ficheros)
@@ -24,7 +24,7 @@
 - **Motor de código:** {{codebase-memory|codegraph|none}}
   (qué grafo de código usa el proyecto — solo uno a la vez. `none` en perfil DOC o si el usuario
   no quiso instalarlo. Lo leen `init.js`/`init.sh`, `index-code.*` y `harness-merge-instructions.js`;
-  sin este campo se asume `codebase-memory`, que era el único motor antes de 1.4.2.)
+  sin este campo se asume `codebase-memory`.)
 - **Selección del motor:** {{usuario|auto}}
   (`auto` = lo decidió la IA con los criterios de `prompts/01_init.md` Fase B punto 6.b)
 - **Motivo de la selección:** {{ej. "auto: TypeScript con alias, ambos cubren el lenguaje; codegraph por coste de contexto (1 herramienta)" | "usuario: ya usa codebase-memory en otros repos"}}
@@ -40,7 +40,7 @@
 - **Símbolo real de prueba usado:** `{{símbolo}}`
 - **La consulta de prueba lo encontró (`search_graph` / `codegraph_explore`):** {{sí/no}}
 - **Lenguajes con cobertura no garantizada en este proyecto (Solidity, Vue SFC, imports remotos de Deno, etc.):** {{lista o "ninguno detectado"}}
-  - Si algún lenguaje falla: anotar aquí y considerar devolverlo al grafo de graphify (ver `docs/KNOWLEDGE_GRAPHS.md`).
+  - Si algún lenguaje falla: anotar aquí y cubrir ese lenguaje con `Grep`/`Read` (ver `docs/KNOWLEDGE_GRAPHS.md`).
 
 ## Historial de cambios de perfil
 

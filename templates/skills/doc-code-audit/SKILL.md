@@ -1,16 +1,15 @@
 # Skill: doc-code-audit
 
-> Carea la documentación del proyecto (grafo de conocimiento, graphify) contra el código
-> real (grafo de código: `codebase-memory-mcp` o `codegraph`, según el campo `Motor de código` de
-> `.harness/PROFILE.md`). Solo existe porque el proyecto tiene los
-> dos grafos — es la capacidad nueva del modelo dual (ver `docs/KNOWLEDGE_GRAPHS.md`).
+> Carea la documentación del proyecto contra el código real (grafo de código:
+> `codebase-memory-mcp` o `codegraph`, según el campo `Motor de código` de
+> `.harness/PROFILE.md`). Requiere un motor de código instalado (ver `docs/KNOWLEDGE_GRAPHS.md`).
 
 ## Disponibilidad por perfil
 
 Lee `.harness/PROFILE.md` primero.
 
 - **CODE y MIXTO-con-MCP:** aplica completa.
-- **DOC (o MIXTO sin MCP instalado):** **no aplica** — no hay dos grafos que carear.
+- **DOC (o MIXTO sin MCP instalado):** **no aplica** — no hay motor de código contra el que carear.
   Dilo explícitamente al usuario y detente; no intentes un careo parcial ni falles en silencio.
 
 ## Alcance
@@ -22,11 +21,9 @@ Lee `.harness/PROFILE.md` primero.
 
 1. **Determinar alcance** (ver arriba).
 
-2. **Extraer afirmaciones verificables del grafo de conocimiento:**
-   ```
-   query-graph.ps1|sh "¿qué símbolos, módulos, funciones o rutas del código menciona <alcance>?"
-   ```
-   Recoger, por cada afirmación: el identificador mencionado y su `fichero:línea` en la documentación.
+2. **Extraer afirmaciones verificables de la documentación del alcance:** localizar
+   con Grep los identificadores de código citados (nombres entre backticks, rutas,
+   nombres de módulos/funciones) y leer su contexto. Recoger, por cada afirmación: el identificador mencionado y su `fichero:línea` en la documentación.
 
 3. **Verificar cada identificador contra el grafo de código:**
    - Motor `codebase-memory`: `search_graph(<identificador>)` — localizarlo;
@@ -60,8 +57,7 @@ por desajuste léxico entre lo que dice la doc y cómo se llama el símbolo real
 
 Antes del paso 2, genera (o actualiza si ya existe) una tabla de traducción por proyecto
 en `.harness/context/` con los pares término-de-doc ↔ identificador-de-código que vayas
-encontrando. Expande la pregunta del paso 2 contra ese vocabulario antes de la travesía
-del grafo — no asumas que una traducción literal basta.
+encontrando. Expande la búsqueda del paso 2 contra ese vocabulario — no asumas que una traducción literal basta.
 
 ## Niveles de evidencia
 

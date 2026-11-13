@@ -1,5 +1,4 @@
-*   **Preguntas de CÓDIGO → herramientas MCP.** Nunca los scripts de graphify:
-    el código no está en ese grafo.
+*   **Preguntas de CÓDIGO → herramientas MCP.**
 
     | Pregunta | Llamada |
     | --- | --- |
@@ -24,6 +23,6 @@
        completitud: si reporta cobertura parcial, saltada o desconocida, lee el
        rango real antes de responder.
 
-    > Si el perfil es **DOC** no hay MCP: el código está en el grafo de
-    > graphify (o se lee directamente — son pocos ficheros). Consultar
+    > Si el perfil es **DOC** no hay MCP: el código se lee directamente con
+    > `Glob`/`Grep`/`Read` (son pocos ficheros). Consultar
     > `.harness/PROFILE.md` en caso de duda.
